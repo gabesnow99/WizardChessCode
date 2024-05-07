@@ -1,7 +1,7 @@
 #include <Stepper.h>
 
 // Global Integers
-#define BUTTON_THRESHOLD 500
+#define BUTTON_THRESHOLD .5
 #define SPR 2038 // steps per revolution
 #define SPEED 14 
 #define MAP1 250
@@ -25,7 +25,7 @@ int cycle_speed = 0;
 unsigned long time = 0;
 Stepper outer_axis = Stepper(SPR, 8, 10, 9, 11);
 Stepper inner_axis = Stepper(SPR, 4, 6, 5, 7);
-volatile bool triggered = false;
+volatile bool toggled = false;
 
 float last_timestamp = 0;
 
@@ -47,18 +47,19 @@ void setup() {
 }
 
 void loop() {
-  // // Cycle Speed Debugger
-  // cycle_speed = millis() - time;
-  // time = millis();
-  // Serial.print("cycle_speed: ");
-  // // Serial.print(cycle_speed); // switch if last debugger
-  // Serial.println(cycle_speed); // switch if not last debugger
+  // Cycle Speed Debugger
+  cycle_speed = millis() - time;
+  time = millis();
+  Serial.print("cycle_speed: ");
+  Serial.print(cycle_speed);
 
 
-  // // joystick debugger
-  // outer_pot_val = analogRead(outer_pot_pin);
-  // inner_pot_val = analogRead(inner_pot_pin);
-  // button_val = analogRead(button_pin);
+  // // joystick variable debugger
+  outer_pot_val = analogRead(outer_pot_pin);
+  inner_pot_val = analogRead(inner_pot_pin);
+  // button_val = digitalRead(button_pin);
+  Serial.print(" toggled: ");
+  Serial.println(toggled);
   // Serial.print(" button_val: ");
   // Serial.print(button_val);
   // Serial.print(" outer_pot_val: ");
@@ -67,34 +68,76 @@ void loop() {
   // Serial.println(inner_pot_val);
 
   // // button test
-  // if (isButtonPushed()){ //bug: I don't think enough current is going to the LED. Why?
+  // if (isButtonPushed()){
   //   digitalWrite(LED_pin, HIGH);
   //   delay(500);
   //   digitalWrite(LED_pin, LOW);
   //   delay(500);
   // }
 
-  if (triggered && (millis() - last_timestamp) > 50){
-    last_timestamp = millis();
-    Serial.print("ONCE ");
-    outer_axis.step(-SPR / 20);
-    triggered = false;
+  // // button trigger interrupt test
+  // if (toggled && (millis() - last_timestamp) > 50){
+  //   last_timestamp = millis();
+  //   Serial.print("ONCE ");
+  //   outer_axis.step(SPR / 100);
+  // }
+
+  // LED shows toggle status
+  if (toggled){
+    digitalWrite(LED_pin, HIGH);
+  }
+  if (!toggled){
+    digitalWrite(LED_pin, LOW);
+  }
+
+  // Control Axies
+  if (outer_pot_val < MAP1 && !toggled){
+    outer_axis.step(SPR / 50);
+  }
+  if (outer_pot_val > MAP2 && !toggled){
+    outer_axis.step(-SPR / 50);
+  }
+  if (inner_pot_val < MAP3 && !toggled){
+    inner_axis.step(SPR / 50);
+  }
+  if (inner_pot_val > MAP4 && !toggled){
+    inner_axis.step(-SPR/ 50);
+  }
+  if (outer_pot_val < MAP1 && toggled){
+    outer_axis.step(SPR / 200);
+    delay(200);
+  }
+  if (outer_pot_val > MAP2 && toggled){
+    outer_axis.step(-SPR / 200);
+    delay(200);
+  }
+  if (inner_pot_val < MAP3 && toggled){
+    inner_axis.step(SPR / 200);
+    delay(200);
+  }
+  if (inner_pot_val > MAP4 && toggled){
+    inner_axis.step(-SPR/ 200);
+    delay(200);
   }
 }
 
 
 // Function Definitions
 bool isButtonPushed(){
-  if (analogRead(button_pin) <= BUTTON_THRESHOLD){
+  if (digitalRead(button_pin) <= BUTTON_THRESHOLD){
     return true;
   } else {
     return false;
   }
 }
 
-void handleInterrupt(){
-  int sensorValue = analogRead(button_pin);
-  if (sensorValue < BUTTON_THRESHOLD){
-    triggered = true;
+void handleInterrupt(){ // BUG: LED status seems to be accurate but often button is unreliable 
+  if (toggled == false)
+  {
+    toggled = true;
   }
+  else
+  {
+    toggled = false;
+  } 
 }
