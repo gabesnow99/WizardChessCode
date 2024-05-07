@@ -5,14 +5,14 @@
 #define SPR 2038 // steps per revolution
 #define SPEED 14 
 #define MAP1 250
-#define MAP2
-#define MAP3
-#define MAP4
+#define MAP2 750
+#define MAP3 250
+#define MAP4 750
 
 // Analog Pins
 #define outer_pot_pin A4 //VRy on joystick board
 #define inner_pot_pin A5 //VRx on joystick board
-#define button_pin 2    //SW  on joystick board
+#define button_pin 2     //SW  on joystick board
 
 // Digital Pins
 #define LED_pin 13
@@ -31,6 +31,7 @@ float last_timestamp = 0;
 
 // Functions
 bool isButtonPushed();
+void handleInterrupt();
 
 
 void setup() {
@@ -76,7 +77,7 @@ void loop() {
   if (triggered && (millis() - last_timestamp) > 50){
     last_timestamp = millis();
     Serial.print("ONCE ");
-    outer_axis.step(SPR / 20);
+    outer_axis.step(-SPR / 20);
     triggered = false;
   }
 }
