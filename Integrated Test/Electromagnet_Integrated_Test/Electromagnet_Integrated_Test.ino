@@ -16,6 +16,7 @@
 
 // Digital Pins
 #define LED_pin 13
+#define EM_pin 3
 
 // Variables
 int outer_pot_val = 0;
@@ -85,9 +86,11 @@ void loop() {
   // LED shows toggle status
   if (toggled){
     digitalWrite(LED_pin, HIGH);
+    digitalWrite(EM_pin, 3);
   }
   if (!toggled){
     digitalWrite(LED_pin, LOW);
+    digitalWrite(EM_pin, 3);
   }
 
   // Control Axies

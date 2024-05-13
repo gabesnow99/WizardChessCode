@@ -20,7 +20,7 @@ INTEGRATED TEST:  (progressively tests all components together)
 	Joystick Controls each axis, one at a time
 	Joystick button toggles fast and slow speeds
 - Joystick_Integrated_Test_2
-	Uses AccelStepper.h
+	Uses AccelStepper.h	
 
 
 KNOWN BUGS:
