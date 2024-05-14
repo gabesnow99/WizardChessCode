@@ -1,7 +1,7 @@
 #include <Stepper.h>
 
 // Global Integers
-#define BUTTON_THRESHOLD .5
+#define BUTTON_THRESHOLD 500
 #define SPR 2038 // steps per revolution
 #define SPEED 14 
 #define MAP1 250
@@ -12,7 +12,7 @@
 // Analog Pins
 #define outer_pot_pin A4 //VRy on joystick board
 #define inner_pot_pin A5 //VRx on joystick board
-#define button_pin 2     //SW  on joystick board
+#define button_pin A3    //SW  on joystick board
 
 // Digital Pins
 #define LED_pin 13
@@ -59,17 +59,15 @@ void loop() {
   // // joystick variable debugger
   outer_pot_val = analogRead(outer_pot_pin);
   inner_pot_val = analogRead(inner_pot_pin);
-  button_val = digitalRead(button_pin);
-  // Serial.print(" toggled: ");
-  // Serial.print(toggled);
+  button_val = analogRead(button_pin);
+  Serial.print(" toggled: ");
+  Serial.print(toggled);
   Serial.print(" button_val: ");
   Serial.println(button_val);
   // Serial.print(" outer_pot_val: ");
   // Serial.print(outer_pot_val);
   // Serial.print(" inner_pot_val: ");
   // Serial.println(inner_pot_val);
-  // Serial.print(" isButtonPushed: ");
-  // Serial.print(toggled);
 
   // // button test
   // if (isButtonPushed()){
@@ -131,7 +129,7 @@ void loop() {
 
 // Function Definitions
 bool isButtonPushed(){
-  if (digitalRead(button_pin) <= BUTTON_THRESHOLD){
+  if (analogRead(button_pin) <= BUTTON_THRESHOLD){
     if (toggled == false)
     {
       toggled = true;
@@ -140,7 +138,7 @@ bool isButtonPushed(){
     {
       toggled = false;
     }     
-    while (digitalRead(button_pin) <= BUTTON_THRESHOLD) {}
+    while (analogRead(button_pin) <= BUTTON_THRESHOLD) {}
     return true;
   } else {
     return false;
