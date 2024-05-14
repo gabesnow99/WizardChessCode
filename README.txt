@@ -13,16 +13,18 @@ ISOLATED TEST:  (test individual components)
 - stepper_test
 	Uses stepper.h
 	Tests one stepper motor at time
+- electromagnet_test
+	blinks LED and electromagnet
 
 INTEGRATED TEST:  (progressively tests all components together)
 - Joystick_Integrated_Test
 	Uses Stepper.h
 	Joystick Controls each axis, one at a time
 	Joystick button toggles fast and slow speeds
+	BUG: interrupt is not reliable. less preferred isButtonPushed used instead
 - Joystick_Integrated_Test_2
-	Uses AccelStepper.h	
-
-
-KNOWN BUGS:
-- ALL: Serial Communicator 64th character runs indefinitely
-- Joystick_Integrated_Test: Current interrupt is unreliable. Gabe's millis command used to be reliable
+	Uses AccelStepper.h
+- Electromagnet_Integrated_Test
+	Uses Joystick to move EM
+	Button engages the EM
+	BUG: interrupt is not reliable. less preferred isButtonPushed used instead

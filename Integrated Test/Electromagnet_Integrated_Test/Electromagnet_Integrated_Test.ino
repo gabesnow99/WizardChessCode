@@ -26,13 +26,13 @@ int cycle_speed = 0;
 unsigned long time = 0;
 Stepper outer_axis = Stepper(SPR, 8, 10, 9, 11);
 Stepper inner_axis = Stepper(SPR, 4, 6, 5, 7);
-volatile bool toggled = false;
+volatile bool toggled = false; 
 
 float last_timestamp = 0;
 
 // Functions
 bool isButtonPushed();
-void handleInterrupt();
+// void handleInterrupt(); // BUG: LED status seems to be accurate but often button is unreliable
 
 
 void setup() {
@@ -41,10 +41,11 @@ void setup() {
   pinMode(outer_pot_pin, INPUT);
   pinMode(inner_pot_pin, INPUT);
   pinMode(button_pin, INPUT_PULLUP);
+  pinMode(EM_pin, OUTPUT);
   outer_axis.setSpeed(SPEED);
   inner_axis.setSpeed(SPEED);
 
-  attachInterrupt(digitalPinToInterrupt(button_pin), handleInterrupt, FALLING);
+  // attachInterrupt(digitalPinToInterrupt(button_pin), handleInterrupt, FALLING); // BUG: LED status seems to be accurate but often button is unreliable
 }
 
 void loop() {
@@ -58,15 +59,17 @@ void loop() {
   // // joystick variable debugger
   outer_pot_val = analogRead(outer_pot_pin);
   inner_pot_val = analogRead(inner_pot_pin);
-  // button_val = digitalRead(button_pin);
-  Serial.print(" toggled: ");
-  Serial.println(toggled);
-  // Serial.print(" button_val: ");
-  // Serial.print(button_val);
+  button_val = digitalRead(button_pin);
+  // Serial.print(" toggled: ");
+  // Serial.print(toggled);
+  Serial.print(" button_val: ");
+  Serial.println(button_val);
   // Serial.print(" outer_pot_val: ");
   // Serial.print(outer_pot_val);
   // Serial.print(" inner_pot_val: ");
   // Serial.println(inner_pot_val);
+  // Serial.print(" isButtonPushed: ");
+  // Serial.print(toggled);
 
   // // button test
   // if (isButtonPushed()){
@@ -84,63 +87,73 @@ void loop() {
   // }
 
   // LED shows toggle status
+  isButtonPushed();
   if (toggled){
     digitalWrite(LED_pin, HIGH);
-    digitalWrite(EM_pin, 3);
-  }
-  if (!toggled){
+    digitalWrite(EM_pin, HIGH);
+  } 
+  if (!toggled) {
     digitalWrite(LED_pin, LOW);
-    digitalWrite(EM_pin, 3);
+    digitalWrite(EM_pin, LOW);
   }
 
   // Control Axies
-  if (outer_pot_val < MAP1 && !toggled){
+  if (outer_pot_val < MAP1 /*&& !toggled*/){
     outer_axis.step(SPR / 50);
   }
-  if (outer_pot_val > MAP2 && !toggled){
+  if (outer_pot_val > MAP2 /*&& !toggled*/){
     outer_axis.step(-SPR / 50);
   }
-  if (inner_pot_val < MAP3 && !toggled){
+  if (inner_pot_val < MAP3 /*&& !toggled*/){
     inner_axis.step(SPR / 50);
   }
-  if (inner_pot_val > MAP4 && !toggled){
+  if (inner_pot_val > MAP4 /*&& !toggled*/){
     inner_axis.step(-SPR/ 50);
   }
-  if (outer_pot_val < MAP1 && toggled){
-    outer_axis.step(SPR / 200);
-    delay(200);
-  }
-  if (outer_pot_val > MAP2 && toggled){
-    outer_axis.step(-SPR / 200);
-    delay(200);
-  }
-  if (inner_pot_val < MAP3 && toggled){
-    inner_axis.step(SPR / 200);
-    delay(200);
-  }
-  if (inner_pot_val > MAP4 && toggled){
-    inner_axis.step(-SPR/ 200);
-    delay(200);
-  }
+  // if (outer_pot_val < MAP1 && toggled){
+  //   outer_axis.step(SPR / 200);
+  //   delay(200);
+  // }
+  // if (outer_pot_val > MAP2 && toggled){
+  //   outer_axis.step(-SPR / 200);
+  //   delay(200);
+  // }
+  // if (inner_pot_val < MAP3 && toggled){
+  //   inner_axis.step(SPR / 200);
+  //   delay(200);
+  // }
+  // if (inner_pot_val > MAP4 && toggled){
+  //   inner_axis.step(-SPR/ 200);
+  //   delay(200);
+  // }
 }
 
 
 // Function Definitions
 bool isButtonPushed(){
   if (digitalRead(button_pin) <= BUTTON_THRESHOLD){
+    if (toggled == false)
+    {
+      toggled = true;
+    }
+    else
+    {
+      toggled = false;
+    }     
+    while (digitalRead(button_pin) <= BUTTON_THRESHOLD) {}
     return true;
   } else {
     return false;
   }
 }
 
-void handleInterrupt(){ // BUG: LED status seems to be accurate but often button is unreliable 
-  if (toggled == false)
-  {
-    toggled = true;
-  }
-  else
-  {
-    toggled = false;
-  } 
-}
+// void handleInterrupt(){ // BUG: LED status seems to be accurate but often button is unreliable 
+  // if (toggled == false)
+  // {
+  //   toggled = true;
+  // }
+  // else
+  // {
+  //   toggled = false;
+  // } 
+// }
