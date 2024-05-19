@@ -27,4 +27,6 @@ INTEGRATED TEST:  (progressively tests all components together)
 - Electromagnet_Integrated_Test
 	Uses Joystick to move EM
 	Button engages the EM
+	Includes limit switch action too
+	BUG: Semi-functional limit switch commands need to be edited
 	BUG: interrupt is not reliable. less preferred isButtonPushed used instead
