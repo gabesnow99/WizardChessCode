@@ -1,116 +1,205 @@
-#include <AccelStepper.h>
+#include <Stepper.h>
 
-// GLOBAL INTEGERS
-#define BUTTON_THRESHOLD 512
+// Global Integers
+#define BUTTON_THRESHOLD 500
 #define DIGITAL_THRESHOLD .5
-#define SPR 2038               // steps per revolution
+#define SPR 2038 // steps per revolution
 #define SPEED 14 
-#define NORTH 250
-#define SOUTH 750
-#define EAST 250
-#define WEST 750
-#define MOTOR_INTERFACE 4
-#define SPEED 14
+#define MAP1 250
+#define MAP2 750
+#define MAP3 250
+#define MAP4 750
 
-// ANALOG PINS
-#define EW_PIN A4              //VRy on joystick board
-#define NS_PIN A5              //VRx on joystick board
-#define BUTTON_PIN A3          //SW  on joystick board
+// Analog Pins
+#define outer_pot_pin A4 //VRy on joystick board
+#define inner_pot_pin A5 //VRx on joystick board
+#define button_pin A3    //SW  on joystick board
 
-// DIGITAL PINS
-#define LED_PIN 13
-#define EM_PIN 4               //Electromagnet
-#define SOUTH_LIMIT_PIN 2
-#define WEST_LIMIT_PIN 3
+// Digital Pins
+#define LED_pin 13
+#define EM_pin 4
 
-// VARIABLES
-int EW_pot = 0;
-int NS_pot = 0;
+// Limit Switch
+#define limit_south 2
+#define limit_west 3
+
+// Variables
+int outer_pot_val = 0;
+int inner_pot_val = 0;
 int button_val = 0;
 int cycle_speed = 0;
 unsigned long time = 0;
-unsigned long last_time = 0;
-volatile bool limit_pressed = false;
-bool toggled = false;
-AccelStepper EW_motor(MOTOR_INTERFACE, 9, 11, 10, 12);
-AccelStepper NS_motor(MOTOR_INTERFACE, 5, 7, 6, 8);
+Stepper outer_axis = Stepper(SPR, 9, 11, 10, 12);
+Stepper inner_axis = Stepper(SPR, 5, 7, 6, 8);
+volatile bool toggled = false; 
 
-// FUNCTION DECLARATIONS
-void PinSetup();
-void MotorSetup();
-void Home();
-void ReadPeripherals();
-void UpdateSerial();
-void HandleInterrupt();
+float last_timestamp = 0;
 
-/*******************************************************************************/
+// Functions
+bool isButtonPushed();
+void pennyGoHome();
+void stepNorth(int steps);
+void stepSouth(int steps);
+void stepEast(int steps);
+void stepWest(int steps);
+// void handleInterrupt(); // BUG: LED status seems to be accurate but often button is unreliable
+
+
 void setup() {
-  PinSetup();
-  MotorSetup();
-  attachInterrupt(digitalPinToInterrupt(SOUTH_LIMIT_PIN), HandleInterrupt, RISING);
-  attachInterrupt(digitalPinToInterrupt(WEST_LIMIT_PIN), HandleInterrupt, RISING);
   Serial.begin(9600);
-  Home();
+  pinMode(LED_pin, OUTPUT);
+  pinMode(outer_pot_pin, INPUT);
+  pinMode(inner_pot_pin, INPUT);
+  pinMode(button_pin, INPUT_PULLUP);
+  pinMode(EM_pin, OUTPUT);
+  pinMode(limit_south, INPUT_PULLUP);
+  pinMode(limit_west, INPUT_PULLUP);
+  outer_axis.setSpeed(SPEED);
+  inner_axis.setSpeed(SPEED);
+
+//  pennyGoHome();
+
+  // attachInterrupt(digitalPinToInterrupt(button_pin), handleInterrupt, FALLING); // BUG: LED status seems to be accurate but often button is unreliable
 }
 
 void loop() {
-  ReadPeripherals();
-  UpdateSerial();
-}
 
-/*******************************************************************************/
-
-// FUNCTION DEFINITIONS
-void PinSetup() {
-  pinMode(EW_PIN, INPUT);
-  pinMode(NS_PIN, INPUT);
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-  pinMode(SOUTH_LIMIT_PIN, INPUT_PULLUP);
-  pinMode(WEST_LIMIT_PIN, INPUT_PULLUP);
-
-  pinMode(EM_PIN, OUTPUT);
-  pinMode(LED_PIN, OUTPUT);
-}
-
-void MotorSetup() {
-  EW_motor.setSpeed(SPEED);
-  NS_motor.setSpeed(SPEED);
-  // EW_motor.setMaxSpeed();
-  // NS_motor.setMaxSpeed();
-  // EW_motor.setAcceleration();
-  // NS_motor.setAcceleration();
-}
-
-void Home() {
-}
-
-void ReadPeripherals() {
-  EW_pot = analogRead(EW_PIN);
-  NS_pot = analogRead(NS_PIN);
-  button_val = analogRead(BUTTON_PIN);
+  // Cycle Speed Debugger
+  cycle_speed = millis() - time;
   time = millis();
-}
+  // Serial.print("cycle_speed: ");
+  // Serial.print(cycle_speed);
 
-void UpdateSerial() {
-  Serial.print("Cycle Speed: ");
-  Serial.print(millis() - last_time);
-  Serial.print(" NS_pot: ");
-  Serial.print(NS_pot);
-  Serial.print(" EW_pot: ");
-  Serial.print(EW_pot);
-  Serial.print(" button_val: ");
-  Serial.print(button_val);
+  // // joystick variable debugger
+  outer_pot_val = analogRead(outer_pot_pin);
+  inner_pot_val = analogRead(inner_pot_pin);
+  button_val = analogRead(button_pin);
+  // Serial.print(" toggled: ");
+  // Serial.print(toggled);
+  // Serial.print(" button_val: ");
+  // Serial.println(button_val);
+  // Serial.print(" outer_pot_val: ");
+  // Serial.print(outer_pot_val);
+  // Serial.print(" inner_pot_val: ");
+  // Serial.println(inner_pot_val);
 
-  Serial.print()
+  // // button test
+  // if (isButtonPushed()){
+  //   digitalWrite(LED_pin, HIGH);
+  //   delay(500);
+  //   digitalWrite(LED_pin, LOW);
+  //   delay(500);
+  // }
 
+  // // button trigger interrupt test
+  // if (toggled && (millis() - last_timestamp) > 50){
+  //   last_timestamp = millis();
+  //   Serial.print("ONCE ");
+  //   outer_axis.step(SPR / 100);
+  // }
+
+  // LED shows toggle status
+  isButtonPushed();
+  if (toggled){
+    digitalWrite(LED_pin, HIGH);
+    digitalWrite(EM_pin, HIGH);
+  } 
+  if (!toggled) {
+    digitalWrite(LED_pin, LOW);
+    digitalWrite(EM_pin, LOW);
+  }
+
+  Serial.print("limit south: ");
+  Serial.print(digitalRead(limit_south));
+  Serial.print(" limit west: ");
+  Serial.print(digitalRead(limit_west));
   Serial.print("\n");
-  last_time = millis();
+
+  // Control Axes
+  if (digitalRead(limit_south) || digitalRead(limit_west)) {
+    return;
+  }
+  if (outer_pot_val < MAP1 /*&& !toggled*/) {
+    outer_axis.step(SPR / 50);
+  }
+  if (outer_pot_val > MAP2 /*&& !toggled*/) {
+    outer_axis.step(-SPR / 50);
+  }
+  if (inner_pot_val < MAP3 /*&& !toggled*/) {
+    inner_axis.step(SPR / 50);
+  }
+  if (inner_pot_val > MAP4 /*&& !toggled*/) {
+    inner_axis.step(-SPR/ 50);
+  }
+//   if (outer_pot_val < MAP1 && toggled){
+//     outer_axis.step(SPR / 200);
+//     delay(200);
+//   }
+//   if (outer_pot_val > MAP2 && toggled){
+//     outer_axis.step(-SPR / 200);
+//     delay(200);
+//   }
+//   if (inner_pot_val < MAP3 && toggled){
+//     inner_axis.step(SPR / 200);
+//     delay(200);
+//   }
+//   if (inner_pot_val > MAP4 && toggled){
+//     inner_axis.step(-SPR/ 200);
+//     delay(200);
+//   }
 }
 
-void HandleInterrupt() {
-  digitalWrite(LED_PIN, HIGH);
-  EW_motor.stop();
-  NS_motor.stop();
-  // add the electromagnet turning off
-  while(1) {} //put a read user input funtion here that moves the motor in the right direction
+
+// Function Definitions
+bool isButtonPushed() {
+  if (analogRead(button_pin) <= BUTTON_THRESHOLD) {
+    if (toggled == false)
+    {
+      toggled = true;
+    }
+    else
+    {
+      toggled = false;
+    }     
+    while (analogRead(button_pin) <= BUTTON_THRESHOLD) {}
+    return true;
+  } else {
+    return false;
+  }
 }
+
+void pennyGoHome() {
+  while (!digitalRead(limit_south)) {
+    stepSouth(10);
+  }
+  while (!digitalRead(limit_west)) {
+    stepWest(10);
+  }
+}
+
+void stepNorth(int steps = SPR/50) {
+  inner_axis.step(steps);
+}
+
+void stepSouth(int steps = SPR/50) {
+  inner_axis.step(-steps);
+}
+
+void stepEast(int steps = SPR/50) {
+  outer_axis.step(steps);
+}
+
+void stepWest(int steps = SPR/50) {
+  outer_axis.step(-steps);
+}
+
+// void handleInterrupt(){ // BUG: LED status seems to be accurate but often button is unreliable 
+  // if (toggled == false)
+  // {
+  //   toggled = true;
+  // }
+  // else
+  // {
+  //   toggled = false;
+  // } 
+// }
