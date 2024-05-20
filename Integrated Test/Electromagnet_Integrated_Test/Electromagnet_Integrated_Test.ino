@@ -17,11 +17,11 @@
 
 // Digital Pins
 #define LED_pin 13
-#define EM_pin 3
+#define EM_pin 4
 
 // Limit Switch
 #define limit_south 2
-#define limit_west 12
+#define limit_west 3
 
 // Variables
 int outer_pot_val = 0;
@@ -29,8 +29,8 @@ int inner_pot_val = 0;
 int button_val = 0;
 int cycle_speed = 0;
 unsigned long time = 0;
-Stepper outer_axis = Stepper(SPR, 8, 10, 9, 11);
-Stepper inner_axis = Stepper(SPR, 4, 6, 5, 7);
+Stepper outer_axis = Stepper(SPR, 9, 11, 10, 12);
+Stepper inner_axis = Stepper(SPR, 5, 7, 6, 8);
 volatile bool toggled = false; 
 
 float last_timestamp = 0;
@@ -57,7 +57,7 @@ void setup() {
   outer_axis.setSpeed(SPEED);
   inner_axis.setSpeed(SPEED);
 
-  pennyGoHome();
+//  pennyGoHome();
 
   // attachInterrupt(digitalPinToInterrupt(button_pin), handleInterrupt, FALLING); // BUG: LED status seems to be accurate but often button is unreliable
 }
