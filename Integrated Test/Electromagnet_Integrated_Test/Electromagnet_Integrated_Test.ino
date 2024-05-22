@@ -120,16 +120,16 @@ void loop() {
     return;
   }
   if (outer_pot_val < MAP1 /*&& !toggled*/) {
-    outer_axis.step(SPR / 50);
+    outer_axis.step(5);
   }
   if (outer_pot_val > MAP2 /*&& !toggled*/) {
-    outer_axis.step(-SPR / 50);
+    outer_axis.step(-5);
   }
   if (inner_pot_val < MAP3 /*&& !toggled*/) {
-    inner_axis.step(SPR / 50);
+    inner_axis.step(5);
   }
   if (inner_pot_val > MAP4 /*&& !toggled*/) {
-    inner_axis.step(-SPR/ 50);
+    inner_axis.step(-5);
   }
 //   if (outer_pot_val < MAP1 && toggled){
 //     outer_axis.step(SPR / 200);
