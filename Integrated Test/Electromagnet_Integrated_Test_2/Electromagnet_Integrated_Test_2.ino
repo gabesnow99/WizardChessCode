@@ -42,6 +42,10 @@ AccelStepper NS_motor(MOTOR_INTERFACE, 5, 7, 6, 8);
 void PinSetup();
 void MotorSetup();
 void Home();
+void StepNorth();
+void StepSouth();
+void StepEast();
+void StepWest();
 void ReadPeripherals();
 void UpdateSerial();
 void HandleInterrupt(); // BUG: fix delays !!!! also THIS IS HIGHLY INNAPROPRIATE INTERRUPT HANDLING CODE
@@ -100,6 +104,36 @@ void MotorSetup() {
 }
 
 void Home() {
+  void Home() {
+    while (!digitalRead(SOUTH_LIMIT_PIN)) {
+      StepSouth(1);
+    }
+    while (!digitalRead(WEST_LIMIT_PIN)) {
+      StepWest(1);
+    }
+  }
+}
+
+void StepNorth(int steps = 1) {
+  NS_motor.move(steps);
+  NS_motor.run();
+  // EW_motor.setSpeed(-SPEED / 4);
+  // EW_motor.runSpeed();
+}
+
+void StepSouth(int steps = 1) {
+  NS_motor.move(-steps);
+  NS_motor.run();
+}
+
+void StepEast(int steps = 1) {
+  EW_motor.move(steps);
+  NS_motor.run();
+}
+
+void StepWest(int steps = 1) {
+  EW_motor.move(-steps);
+  NS_motor.run();
 }
 
 void ReadPeripherals() {
