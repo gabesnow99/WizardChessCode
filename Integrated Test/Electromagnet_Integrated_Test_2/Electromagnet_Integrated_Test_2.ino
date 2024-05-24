@@ -61,17 +61,22 @@ void setup() {
 void loop() {
   ReadPeripherals();
   // UpdateSerial();
-  // RunByJoystick();
+  RunByJoystick();
   
+  // TOGGLE JOYSTICK
+  // if (toggled){
+  //   ToggleRunByJoystick();
+  // }
+
+  // TOGGLE ELECTROMAGNET
   if (toggled){
-    ToggleRunByJoystick();
+    digitalWrite(LED_PIN, HIGH);
+    digitalWrite(EM_PIN, HIGH);
+  } else {
+    digitalWrite(LED_PIN, LOW);
+    digitalWrite(EM_PIN, LOW);
   }
 
-  // if (toggled){
-  //   digitalWrite(EM_PIN, HIGH);
-  // } else {
-  //   digitalWrite(EM_PIN, LOW);
-  // }
 }
 
 /*******************************************************************************/
@@ -236,8 +241,8 @@ void ToggleRunByJoystick() {
       }
 
       ReadPeripherals();
-      digitalWrite(LED_PIN, LOW);
   }
+  digitalWrite(LED_PIN, LOW);
   UpdateSerial();
 }
 
