@@ -6,7 +6,12 @@ Not sure how these are formatted, Gabe probably knows haha
 *Sketch file attributes are listed one indent inside each corresponding subfolder
 
 [REPO MAP]
+FINAL CODE:
+- final_R1.0
+
 ISOLATED TEST:  (test individual components)
+- collision detection
+	- WILL USE serial communication to predict the quickest path from two squares while avoiding other pieces
 - full_gantry_test
 	- Uses stepper.h
 	- Uses serial command line to move each axis
