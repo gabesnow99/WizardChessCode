@@ -171,9 +171,9 @@ void HandleInterrupt() { // BUG: fix delays !!!! also THIS IS HIGHLY INNAPROPRIA
   // USER CHOOSES DIRECTION TO GO
   while (1) {
     digitalWrite(LED_PIN, HIGH);
-    delay(63);
+    // delay(63);    // TODO: Switch to PWM funciton (you will need to move all the pins too ... TAKE A PICTURE FIRST lol)
     digitalWrite(LED_PIN, LOW);
-    delay(59);
+    // delay(59);
     ReadPeripherals();
 
     // WEST
