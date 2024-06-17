@@ -8,10 +8,18 @@ Not sure how these are formatted, Gabe probably knows haha
 [REPO MAP]
 FINAL CODE:
 - final_R1.0
+	- Operations: setup, home electromagnet, moves magnet based on joystick input
+	- edited, slightly consolidated, and improved from Electromagnet_integrated_test_2
+	- Interrupts are attached to pins 2 and 3 and ISR works properly
+	- PennyGoHome function works within a new main::function declared in Arduino's main.cpp 
+	- IDE MODIFICATION REQUIERED: a slight change to main.cpp enables homingSequence() to operate. (a copy of this file is located in the root folder named "modifiedMain.cpp". a name change to "main.cpp" in the correct folder on the compiling machine is required for compilation
+- final_R1.1
+	- WILL exist, derived from final_R1.0
 
 ISOLATED TEST:  (test individual components)
 - collision detection
 	- WILL USE serial communication to predict the quickest path from two squares while avoiding other pieces
+	- WILL be an edit from from the final_R1.0 file and WILL contribute to final_R1.1, evenually
 - full_gantry_test
 	- Uses stepper.h
 	- Uses serial command line to move each axis
