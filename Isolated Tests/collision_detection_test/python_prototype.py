@@ -15,7 +15,7 @@ assert num_cols == num_rows, "for now, num_rows and num_cols must be equal"
 assert isinstance(wall_length, int), "board_height, num_rows, num_cols must all be integers, OR wall_length isn't calculating properly"
 assert board_height / num_rows % 2 == 0, "board_height / num_rows AND board_height / num_cols must be even"
 
-class Square:
+class Square: #NOTE Square CLASS'S ONLY FUNCTION IS TO TRACK WHICH PIECE IS IN WHICH SQUARE. WHEN PASSING IN SQUARE LOCATIONS ANYWHERE ELSE STRINGS SHOULD BE USED
     def __init__(self, col: str, row: int):
         self.col = col
         self.row = row
@@ -37,7 +37,7 @@ class Position:
         assert isinstance(square[0], str), 'no col was identified'
         assert isinstance(square[1], int), 'no row was identified'
         new_col, new_row = self._find_first_char_and_int(square)
-        # TODO 
+        # TODO MOVE THE PIECE :) FIGURE IT OUT <3 YOU SLAY BRO
 
     def _find_first_char_and_int(self, square: str):
         first_char = None
@@ -70,14 +70,13 @@ class Piece:
 
     def moveTo(self, square: str):
         self._position.moveTo(square)
-            
-    # TODO: WHEN MOVING A PIECE, send coordinates to the position class
 
     def _convertCol(self, string):
         return int(ord(string.upper()) - ord('A') + 1)
     
     # TODO: MAKE A FUNTION THAT HANDLES BEING CAPTURED
-    # THE SQUARE ATTRIBUTE OF THE 
+    # THE SQUARE ATTRIBUTE OF THE self._position SHOULD REFLECT BEING OFF THE BOARD 
+    # THE COORDINATES ATTRIBUTE OF THE self._position SHOULD PLACE THE PIECE SOMEHWERE OUT OF THE WAY OF ALL OTHER PIECES/SQUARES
     
     @property
     def x(self):
