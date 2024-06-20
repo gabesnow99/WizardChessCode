@@ -14,7 +14,7 @@ FINAL CODE:
 	- PennyGoHome function works within a new main::function declared in Arduino's main.cpp 
 	- IDE MODIFICATION REQUIERED: a slight change to main.cpp enables homingSequence() to operate. (a copy of this file is located in the root folder named "modifiedMain.cpp". a name change to "main.cpp" in the correct folder on the compiling machine is required for compilation
 - final_R1.1
-	- WILL exist, derived from final_R1.0
+	- WILL exist, derived from final_R1.0 and be able to move from coordinate to coordinate
 
 ISOLATED TEST:  (test individual components)
 - collision detection

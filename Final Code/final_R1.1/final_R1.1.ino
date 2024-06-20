@@ -158,7 +158,7 @@ void PennyGoHome() {
 
   // TODO: Set current location as datum point
 
-  Serial.println("Penny went home. Good girl!");
+  Serial.println("Penny was sent home. Good girl!");
 }
 
 void ReadPeripherals() {
@@ -262,8 +262,6 @@ void CheckInterruptProtocal() {
       digitalWrite(LED_PIN, LOW);
       delay(175);
       ReadPeripherals();
-
-      // TODO: add safety feature in case user gives wrong input (for loop ~300 the ask again for input)
 
       // WEST
       if (EW_pot > ANALOG_THRESHOLD + DEADZONE_VAL) {
