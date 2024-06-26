@@ -1,44 +1,56 @@
 import support #type: ignore
 
-#INTEGRATION BUG_PREVENTION: any division need to be done so that results have no remainders and all products are integers
-#--------------------------- Therefore, board_height // num_col AND board_height // num_rows needs to be a whole, EVEN number
-
 support.cls()
 
-board_height = 2000 #int(input('Please enter board hieght: '))
-num_cols = 8 #int(input('Please enter number of columns: '))
-num_rows = 8 #int(input('Please enter number of rows: '))
-wall_length = board_height // num_rows
-half_wall_length = wall_length // 2 
-messages = []
-assert num_cols == num_rows, "for now, num_rows and num_cols must be equal"
-assert isinstance(wall_length, int), "board_height, num_rows, num_cols must all be integers, OR wall_length isn't calculating properly"
-assert board_height / num_rows % 2 == 0, "board_height / num_rows AND board_height / num_cols must be even"
-
-class Square: #NOTE Square CLASS'S ONLY FUNCTION IS TO TRACK WHICH PIECE IS IN WHICH SQUARE. WHEN PASSING IN SQUARE LOCATIONS ANYWHERE ELSE STRINGS SHOULD BE USED
-    def __init__(self, col: str, row: int):
-        self.col = col
-        self.row = row
-        self.isOccupiedBy = []
+#INTEGRATION BUG_PREVENTION: any division need to be done so that results have no remainders and all products are integers
+#--------------------------- Therefore, board_height // num_col AND board_height // num_rows needs to be a whole, EVEN number
+#--------------------------- Also, board numbers over 9 will cause an error in the isOccupied() function and perhaps serveral other places
 
 class Position:
-    def __init__(self, square: str):
-        assert isinstance(square, str), 'invalid square type (str)'
-        first_char, first_int = self._find_first_char_and_int(square)
-        col_num = int(ord(first_char.upper()) - ord('A') + 1)
-        self.square = first_char.upper() + first_int
-        x = half_wall_length + wall_length * (col_num - 1)
-        y = half_wall_length + wall_length * (int(first_int) - 1)
-        self.coordinates = {'x': x, 'y': y}
+    def __init__(self, col: str, row: int):
+        assert isinstance(col, str), 'col type must be str'
+        assert len(col) == 1, 'for now col must be A - Z'
+        assert isinstance(row, int), 'row type must be int'
+        self.coordinates = {'x': self._convert_x(col), 'y': self._convert_y(row)}
+
+    def moveTo(self, col: str, row: int):
+        self.coordinates['x'] = self._convert_x(col)
+        self.coordinates['y'] = self._convert_y(row)
+
+    def _convert_col(self, col: str):
+        return int(ord(col.upper()) - ord('A') + 1)
+    
+    def _convert_x(self, col: str):
+        return half_wall_length + wall_length * (self._convert_col(col) - 1)
+    
+    def _convert_y(self, row: int):
+        return half_wall_length + wall_length * (row - 1)
+
+class Piece:
+    def __init__(self, square: str, team: str):
+        assert isinstance(square, str), 'square type must be a string'
+        self.square = self._find_first_char_and_int(square)
+        self.col, self.row = self.square
+        self.row = int(self.row)
+        self.isCaptured = False
+        self.team = team
+        self._position = Position(self.col, self.row)
 
     def moveTo(self, square: str):
-        assert isinstance(square, str), 'invalid square type (str)'
-        assert len(square) == 2, 'invalid string'
-        assert isinstance(square[0], str), 'no col was identified'
-        assert isinstance(square[1], int), 'no row was identified'
-        new_col, new_row = self._find_first_char_and_int(square)
-        # TODO MOVE THE PIECE :) FIGURE IT OUT <3 YOU SLAY BRO
+        square = self._find_first_char_and_int(square)
+        self.square = square
+        if isOccupied(square):
+            kill(square)
+        self.col, self.row = square
+        self.row = int(self.row)
+        self._position.moveTo(self.col, self.row)
 
+    def die(self):
+        pass
+    # TODO: MAKE A FUNTION THAT HANDLES BEING CAPTURED
+    # THE SQUARE ATTRIBUTE OF THE self._position SHOULD REFLECT BEING OFF THE BOARD 
+    # THE COORDINATES ATTRIBUTE OF THE self._position SHOULD PLACE THE PIECE SOMEHWERE OUT OF THE WAY OF ALL OTHER PIECES/SQUARES
+    
     def _find_first_char_and_int(self, square: str):
         first_char = None
         first_int = None
@@ -57,26 +69,7 @@ class Position:
             raise ValueError('no col was identified')
         if not first_int:
             raise ValueError('no row was identified')
-        return first_char, first_int
-
-class Piece:
-    def __init__(self, square: Position): # TODO CHANGE THIS TO ONLY ACCEPT A STRING
-        assert isinstance(square, Position), 'invalid position object'
-        self.col = square.square[0]
-        self.row = square.square[1]
-        self.isCaputered = False
-        self._col_num = self._convertCol(self.col)
-        self._position = Position(self.col + str(self.row))
-
-    def moveTo(self, square: str):
-        self._position.moveTo(square)
-
-    def _convertCol(self, string):
-        return int(ord(string.upper()) - ord('A') + 1)
-    
-    # TODO: MAKE A FUNTION THAT HANDLES BEING CAPTURED
-    # THE SQUARE ATTRIBUTE OF THE self._position SHOULD REFLECT BEING OFF THE BOARD 
-    # THE COORDINATES ATTRIBUTE OF THE self._position SHOULD PLACE THE PIECE SOMEHWERE OUT OF THE WAY OF ALL OTHER PIECES/SQUARES
+        return first_char.upper() + first_int
     
     @property
     def x(self):
@@ -87,12 +80,10 @@ class Piece:
         return self._position.coordinates['y']
     
     @property
-    def square(self):
-        return self._position.square
-    
-    @property # TODO FIGURE OUT IF WE EVEN NEED THIS
-    def coordinates(self):
-        return self._position.coordinates
+    def info(self):
+        return (f'Captured: {self.isCaptured}, Team: {self.team}'
+                f'\npawn.x: {self.x}, pawn.y: {self.y}'
+                f'\npawn.col: {self.col}, pawn.row: {self.row}, pawn.square: {self.square}')
     
     # @y.setter
     # def y(self, value: int):
@@ -106,24 +97,64 @@ class Piece:
 
 def set_up_board(num_cols, num_rows):
     board = {}
-    for col in range(num_cols):
-        for row in range(num_rows):
-            board[(col), (row)] = Square(col, row)
+    for col in range(0, num_cols):
+        board[chr(ord('A') + col)] = {}
+        for row in range(1, num_rows + 1):
+            board[chr(ord('A') + col)][row] = []
     return board
 
-def printm():
-    for message in messages: print(message)
+def isOccupied(square: str):
+    assert isinstance(square, str), 'square type must be a str'
+    assert len(square) == 2, 'square length must be 2'
+    assert square.isupper(), 'no col identified'
+    assert square[1].isdigit(), 'no row identified'
+    if board[square[0]][int(square[1])]:
+        return True
+    return False
 
+def kill(square: str):
+    board[square[0]][square[1]][0].die() # TODO FIND OUT HOW TO MAKE THIS ONE DIE
+
+board_height = 2000 #int(input('Please enter board hieght: '))
+num_cols = 8 #int(input('Please enter number of columns: '))
+num_rows = 8 #int(input('Please enter number of rows: '))
+wall_length = board_height // num_rows
+half_wall_length = wall_length // 2 
+assert isinstance(wall_length, int), "board_height, num_rows, num_cols must all be integers, OR wall_length isn't calculating properly"
+assert board_height / num_rows % 2 == 0, "board_height / num_rows AND board_height / num_cols must be even"
 board = set_up_board(num_cols, num_rows)
 
-start = input('Please enter the starting location: ')
-support.cls()
-pawn = Piece(start)
-messages.append(f'\npawn.x: {pawn.x}, pawn.y: {pawn.y}, pawn.coordinates: {pawn.coordinates}\npawn.col: {pawn.col}, pawn.row: {pawn.row}, pawn.square: {pawn.square}')
-printm()
+######################################################## FOR PYTHON SHELL ################################################################
 
-new_square = Position(input('\nPlease enter the new location: '))
+messages = []
+
+def move_piece():
+    new_square = input('\nPlease enter the new location: ')
+    if new_square == '':
+        return True
+    support.cls()
+    pawn.moveTo(new_square)
+    add_massage(f'\nMoved pawn to {new_square}:\n')
+    printm()
+
+def printm():
+    messages.append(pawn.info)
+    for message in messages: print(message)
+
+def add_massage(string: str):
+    messages.append(string)
+
+while True:
+    start = input('Please enter the starting location: ')
+    if start == '':
+        break
+    support.cls()
+    pawn = Piece(start, 'White')
+    add_massage(f'pawn is created at: {start}\n')
+    printm()
+
+    while True:
+        if move_piece():
+            break
+    break
 support.cls()
-messages.append(f'\nMoved pawn to ')
-pawn.moveTo(new_square)
-printm()

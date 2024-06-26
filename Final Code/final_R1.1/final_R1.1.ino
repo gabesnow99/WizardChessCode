@@ -1,8 +1,9 @@
 // NOTE: main.cpp was modified to include homingSequence() {}, therefore if the IDE is updated we may need to modify this file again
-// NOTE: having a separate homingSequence() {} overrides the bug that sends the ISR
-// NOTE: having an unmodified main.cpp will run but not execute the homingSequence() {} function
+// NOTE: having a separate homingSequence() {} overrides the bug that triggers the ISR prematurely immediately following setup(), caused by homing the carriage
+// NOTE: having an unmodified main.cpp may run but not execute the homingSequence() {} function
 
 #include <AccelStepper.h>
+#include <MultiStepper.h>
 
 // GLOBAL INTEGERS
 #define ANALOG_THRESHOLD 505   // offset from 512 because of joystick calibration
@@ -15,6 +16,8 @@
 #define MOTOR_INTERFACE 4
 #define DEADZONE_VAL 10
 #define INTERRUPT_OFFEST 100
+#define EAST_MOTOR_LIMIT 3672  // Testing the EW limit 5 times we reached these step counts (3988, 3979, 3946, 3975, 3971)
+#define NORTH_MOTOR_LIMIT 4637 // Testing the EW limit 5 times we reached these step counts (4917, 4980, 4916 ... larger than EAST_MOTOR_LIMIT) NOTE: These tests where approximated, the switch was not wired up
 
 // ANALOG PINS
 #define EW_PIN A4              // VRy on joystick board
@@ -35,11 +38,13 @@ int cycle_speed = 0;
 int EW_speed = 0;
 int NS_speed = 0;
 int debug_counter = 0;
+long coordinates[2] = {0, 0};
 unsigned long last_time = 0;
 bool toggled = false;
 volatile bool interruption = false;
 AccelStepper EW_motor(MOTOR_INTERFACE, 9, 11, 10, 12);
 AccelStepper NS_motor(MOTOR_INTERFACE, 5, 7, 6, 8);
+MultiStepper carriage;
 
 // FUNCTION DECLARATIONS
 
@@ -53,10 +58,15 @@ void ReadPeripherals();
 void UpdateSerial();
 void RunByJoystick();
 void UpdateElectromagnet();
+void GoTo();
 
 // AUXILARY FUNCTIONS
 void HandleInterrupt();
 void CheckInterruptProtocal();
+void GoNorth();
+void GoSouth();
+void GoEast();
+void GoWest();
 
 /**************************************************************************************************************/
 void setup() {
@@ -78,14 +88,14 @@ void homingSequence() {
 }
 
 void loop() {
-  // if (debug_counter == 0) { // DEBUG DELETABLE
-  //   Serial.println("running...");
-  //   debug_counter = 1;
-  // }
+  if (toggled) {
+    UpdateSerial();
+  }
 
   CheckInterruptProtocal();
   ReadPeripherals();
   RunByJoystick();
+  // GoNorth();
   UpdateElectromagnet();
   // UpdateSerial();
 }
@@ -111,13 +121,16 @@ void MotorSetup() {
   NS_motor.setSpeed(SPEED);
   EW_motor.setMaxSpeed(SPEED);
   NS_motor.setMaxSpeed(SPEED);
+
+  carriage.addStepper(EW_motor);
+  carriage.addStepper(NS_motor);
 }
 
 void PennyGoHome() {
   Serial.println("Sending Penny Home...");
 
   // HOME NS_motor
-  NS_motor.move(300); // IMPORTANT: this move value should be higher than the next move value and large enough to unclick a limit switch
+  NS_motor.move(300); // IMPORTANT: this move value should be large enough to unclick a limit switch
   NS_motor.setSpeed(SPEED);
 
   while (!digitalRead(SOUTH_LIMIT_PIN) && NS_motor.distanceToGo() != 0) { // IMPORTANT: the digitalRead(SOUTH_LIMIT_PIN) is to ensure the **North** limit is not triggered. Currently this limit is not wired up. 
@@ -129,7 +142,7 @@ void PennyGoHome() {
     NS_motor.runSpeed();
   }
 
-  NS_motor.move(200);
+  NS_motor.move(300);
   NS_motor.setSpeed(SPEED);
 
   while (NS_motor.distanceToGo() != 0) {
@@ -137,7 +150,7 @@ void PennyGoHome() {
   }
 
   // HOME EW_motor
-  EW_motor.move(300); // IMPORTANT: this move value should be higher than the next move value and large enough to unclick a limit switch
+  EW_motor.move(300); // IMPORTANT: this move value should be large enough to unclick a limit switch
   EW_motor.setSpeed(SPEED);
 
   while (!digitalRead(WEST_LIMIT_PIN) && EW_motor.distanceToGo() != 0) { // IMPORTANT: the digitalRead(WEST_LIMIT_PIN) is to ensure the **East** limit is not triggered. Currently this limit is not wired up.
@@ -149,16 +162,17 @@ void PennyGoHome() {
     EW_motor.runSpeed();
   }
 
-  EW_motor.move(200);
+  EW_motor.move(300);
   EW_motor.setSpeed(SPEED);
 
   while (EW_motor.distanceToGo() != 0) {
     EW_motor.runSpeed();
   }
 
-  // TODO: Set current location as datum point
+  NS_motor.setCurrentPosition(0);
+  EW_motor.setCurrentPosition(0);
 
-  Serial.println("Penny was sent home. Good girl!");
+  Serial.println("Penny went home. Good girl!");
 }
 
 void ReadPeripherals() {
@@ -176,12 +190,14 @@ void UpdateSerial() {
   // VARIABLES
   Serial.print("Cycle Speed: ");
   Serial.print(millis() - last_time);
-  Serial.print(" toggled: ");
-  Serial.print(toggled);
-  // Serial.print(" EW_motor.currentPosition: ");
-  // Serial.print(EW_motor.currentPosition());
-  Serial.print(" interruption: ");
-  Serial.print(interruption);
+  // Serial.print(" toggled: ");
+  // Serial.print(toggled);
+  Serial.print(" EW_motor.currentPosition: ");
+  Serial.print(EW_motor.currentPosition());
+  Serial.print(" NS_motor.currentPosition: ");
+  Serial.print(NS_motor.currentPosition());
+  // Serial.print(" interruption: ");
+  // Serial.print(interruption);
 
   // INPUTS
   // Serial.print(" NS_pot: ");
@@ -232,6 +248,7 @@ void UpdateElectromagnet() {
 
 void CheckInterruptProtocal() {
   if (interruption) {
+    UpdateSerial();
     Serial.println("INTERRUPTION DETECTED");
 
     // STOP POWER
@@ -262,6 +279,8 @@ void CheckInterruptProtocal() {
       digitalWrite(LED_PIN, LOW);
       delay(175);
       ReadPeripherals();
+
+      // TODO: add safety feature in case user gives wrong input (for loop ~300 the ask again for input)
 
       // WEST
       if (EW_pot > ANALOG_THRESHOLD + DEADZONE_VAL) {
@@ -319,4 +338,37 @@ void CheckInterruptProtocal() {
 
     interruption = false;
   }
+}
+
+void GoNorth() {
+    NS_motor.setSpeed(SPEED);
+    NS_motor.runSpeed();
+}
+
+void GoSouth() {
+    NS_motor.setSpeed(-SPEED);
+    NS_motor.runSpeed();
+}
+
+void GoEast() {
+    EW_motor.setSpeed(SPEED);
+    EW_motor.runSpeed();
+}
+
+void GoWest() {
+    EW_motor.setSpeed(-SPEED);
+    EW_motor.runSpeed();
+}
+
+void GoTo() {
+  // if (coordinates[0] > ... || coordinates[1] > ...) {
+  //   ...
+  // }
+
+  // if (coordinates[0] < ... || coordinates[1] < ...) {
+  //   ...
+  // }
+
+  carriage.moveTo(coordinates);
+  carriage.runSpeedToPosition();
 }

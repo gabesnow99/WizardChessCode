@@ -14,7 +14,8 @@ FINAL CODE:
 	- PennyGoHome function works within a new main::function declared in Arduino's main.cpp 
 	- IDE MODIFICATION REQUIERED: a slight change to main.cpp enables homingSequence() to operate. (a copy of this file is located in the root folder named "modifiedMain.cpp". a name change to "main.cpp" in the correct folder on the compiling machine is required for compilation
 - final_R1.1
-	- WILL exist, derived from final_R1.0 and be able to move from coordinate to coordinate
+	- derived from final_R1.0
+	- ALMOST able to move from coordinate to coordinate
 
 ISOLATED TEST:  (test individual components)
 - collision detection
@@ -26,7 +27,10 @@ ISOLATED TEST:  (test individual components)
 - joystick_test
 	- Print input variables from joystick in serial line
 - serial_test
-	- Can't remember what this does
+	- turns on led when reading serial
+	- displays ACSII values from serial
+- serial_test_2
+	- ALMOST able to read in coordinates into an array
 - stepper_test
 	- Uses stepper.h
 	- Tests one stepper motor at time

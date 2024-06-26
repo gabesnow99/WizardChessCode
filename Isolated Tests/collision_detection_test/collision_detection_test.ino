@@ -3,6 +3,8 @@ void setup() {
 
 }
 
+void homingSequence() {};
+
 void loop() {
   // put your main code here, to run repeatedly:
 

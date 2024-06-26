@@ -78,9 +78,8 @@ void homingSequence() {
 }
 
 void loop() {
-  // if (debug_counter == 0) { // DEBUG DELETABLE
-  //   Serial.println("running...");
-  //   debug_counter = 1;
+  // if (toggled) {
+  //   UpdateSerial();
   // }
 
   CheckInterruptProtocal();
