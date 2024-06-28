@@ -38,9 +38,10 @@ int cycle_speed = 0;
 int EW_speed = 0;
 int NS_speed = 0;
 int debug_counter = 0;
-long coordinates[2] = {0, 0};
+long coordinates[2] = {0};
 unsigned long last_time = 0;
 bool toggled = false;
+bool switch_val = false;
 volatile bool interruption = false;
 AccelStepper EW_motor(MOTOR_INTERFACE, 9, 11, 10, 12);
 AccelStepper NS_motor(MOTOR_INTERFACE, 5, 7, 6, 8);
@@ -58,15 +59,16 @@ void ReadPeripherals();
 void UpdateSerial();
 void RunByJoystick();
 void UpdateElectromagnet();
-void GoTo();
+void CheckInterruptProtocal();
+void GoToCoordinates();
 
 // AUXILARY FUNCTIONS
 void HandleInterrupt();
-void CheckInterruptProtocal();
 void GoNorth();
 void GoSouth();
 void GoEast();
 void GoWest();
+void ReadSerial();
 
 /**************************************************************************************************************/
 void setup() {
@@ -88,14 +90,20 @@ void homingSequence() {
 }
 
 void loop() {
+  // if (toggled) {
+  //   UpdateSerial();
+  // }
+
   if (toggled) {
-    UpdateSerial();
+    ReadSerial();
+    toggled = false;
+    delay(300);
+    GoToCoordinates();
   }
 
-  CheckInterruptProtocal();
   ReadPeripherals();
+  CheckInterruptProtocal();
   RunByJoystick();
-  // GoNorth();
   UpdateElectromagnet();
   // UpdateSerial();
 }
@@ -148,6 +156,8 @@ void PennyGoHome() {
   while (NS_motor.distanceToGo() != 0) {
     NS_motor.runSpeed();
   }
+
+  Serial.println("... almost there, Penny!");
 
   // HOME EW_motor
   EW_motor.move(300); // IMPORTANT: this move value should be large enough to unclick a limit switch
@@ -220,6 +230,9 @@ void UpdateSerial() {
 
 void HandleInterrupt() {
   interruption = true;
+  // TEMPORARY BUG SOLUTION (DOESN'T WORK)
+  // Serial.println("INTERRUPTION DETECTED! Must restart arduino.");
+  // while (true) {}
 }
 
 void RunByJoystick() {
@@ -280,8 +293,6 @@ void CheckInterruptProtocal() {
       delay(175);
       ReadPeripherals();
 
-      // TODO: add safety feature in case user gives wrong input (for loop ~300 the ask again for input)
-
       // WEST
       if (EW_pot > ANALOG_THRESHOLD + DEADZONE_VAL) {
         while (digitalRead(WEST_LIMIT_PIN)) {
@@ -336,6 +347,9 @@ void CheckInterruptProtocal() {
       } 
     }
 
+    NS_motor.moveTo(NS_motor.currentPosition());
+    EW_motor.moveTo(EW_motor.currentPosition());
+    
     interruption = false;
   }
 }
@@ -360,15 +374,79 @@ void GoWest() {
     EW_motor.runSpeed();
 }
 
-void GoTo() {
-  // if (coordinates[0] > ... || coordinates[1] > ...) {
-  //   ...
-  // }
-
-  // if (coordinates[0] < ... || coordinates[1] < ...) {
-  //   ...
-  // }
+void GoToCoordinates() {
+  Serial.print("COORDINATES x: ");
+  Serial.print(coordinates[0]);
+  Serial.print(", y: ");
+  Serial.println(coordinates[1]);
+  Serial.println("Go to these coordinates?");
+  Serial.println("North == Yes || South == No");
+  toggled = false;
+  while (true) {
+    ReadPeripherals();
+    if (NS_pot > ANALOG_THRESHOLD + DEADZONE_VAL) {
+      Serial.println("Will not go. (Delay 1 second)");
+      switch_val = false;
+      delay(1000);
+      return;
+    }
+    if (NS_pot < ANALOG_THRESHOLD - DEADZONE_VAL) {
+      Serial.println("Moving...");
+      switch_val = true;
+      break;
+    }
+    digitalWrite(LED_PIN, HIGH);
+    delay(125);
+    digitalWrite(LED_PIN, LOW);
+    delay(125);
+  }
 
   carriage.moveTo(coordinates);
-  carriage.runSpeedToPosition();
+  while (NS_motor.distanceToGo() != 0 || EW_motor.distanceToGo() != 0) {
+    CheckInterruptProtocal();
+    carriage.run();
+  }
+  Serial.println("Arrived!");
+}
+
+void ReadSerial() {
+  int index = 0;
+  int count = 0;
+  int serial[9] = {0};
+
+  Serial.println("reading in serial...");
+  while (Serial.available() > 0) {
+    serial[index] = Serial.read() - '0';
+    index += 1;
+    count += 1;
+    if (count >= 9) { break; }
+  }
+  while (Serial.available() > 0) {Serial.read();}
+
+  switch_val = (serial[4] == ',' - '0') ? true : false; // CHECKS FOR ',' at index 4
+  switch (switch_val) {
+    case true:
+      Serial.println("printing serial data...");
+      serial[4] = ',';
+      coordinates[0] = serial[0] * 1000 + serial[1] * 100 + serial[2] * 10 + serial[3];
+      coordinates[1] = serial[5] * 1000 + serial[6] * 100 + serial[7] * 10 + serial[8];
+      Serial.print(coordinates[0]);
+      Serial.print(", ");
+      Serial.println(coordinates[1]);
+
+      index = 0;
+      count = 0;
+      for (int i = 0; i < 9; i++) {
+        serial[i] = 0;
+      }
+      break;
+    case false:
+      Serial.println("INVALID COORDINATE FORMAT");
+      index = 0;
+      count = 0;
+      for (int i = 0; i < 9; i++) {
+        serial[i] = 0;
+      }
+      break;
+  }
 }

@@ -1,48 +1,71 @@
-int numbers[2] = {0, 0};
+#define BUTTON_PIN A3
+#define ANALOG_THRESHOLD 505
+
+int serial[11] = {0};
+int numbers[2] = {0};
 int index = 0;
+int count = 0;
+bool toggled = false;
+bool switch_val = false;
 
 void setup() {
   Serial.begin(9600);
   Serial.println("Setup Complete");
-
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
 }
 
 void homingSequence() {};
 
 void loop() {
-  ReadSerial();
-
+  ReadPeripherals();
+  if (toggled) {
+    MyReadSerial();
+    toggled = false;
+    delay(300);
+  }
 }
 
-void ReadSerial() {
-  if (Serial.available() > 0) {
-      // Read the incoming byte
-      char incomingByte = Serial.read();
+void MyReadSerial() {
+  Serial.println("reading in serial...");
+  while (Serial.available() > 0) {
+    serial[index] = Serial.read() - '0';
+    index += 1;
+    count += 1;
+    if (count >= 9) { break; }
+  }
+  while (Serial.available() > 0) {Serial.read();}
 
-      // Check if the received byte is a digit or a '-' sign
-      if (isdigit(incomingByte) || incomingByte == '-') {
-          // Convert the received byte to an integer and append to the current number
-          numbers[index] = numbers[index] * 10 + (incomingByte - '0');
+  switch_val = (serial[4] == ',' - '0') ? true : false; // CHECKS FOR ',' at index 4
+  switch (switch_val) {
+    case true:
+      Serial.println("printing serial data...");
+      serial[4] = ',';
+      numbers[0] = serial[0] * 1000 + serial[1] * 100 + serial[2] * 10 + serial[3];
+      numbers[1] = serial[5] * 1000 + serial[6] * 100 + serial[7] * 10 + serial[8];
+      Serial.print(numbers[0]);
+      Serial.print(", ");
+      Serial.print(numbers[1]);
+
+      index = 0;
+      count = 0;
+      for (int i = 0; i < 9; i++) {
+        serial[i] = 0;
       }
-      else if (incomingByte == ',') {
-          // Move to the next index in the array
-          index++;
-
-          // Check if we have reached the end of the array
-          if (index >= 2) {
-              // Reset the index for the next input
-              index = 0;
-
-              // Optionally, process or use the received numbers here
-              // Example: Print the received numbers
-              Serial.print("Received numbers: ");
-              Serial.print(numbers[0]);
-              Serial.print(", ");
-              Serial.println(numbers[1]);
-
-              // Clear the array for the next input
-              memset(numbers, 0, sizeof(numbers));
-          }
+      break;
+    case false:
+      Serial.println("INVALID COORDINATE FORMAT");
+      index = 0;
+      count = 0;
+      for (int i = 0; i < 9; i++) {
+        serial[i] = 0;
       }
+      break;
+  }
+}
+
+void ReadPeripherals() {
+  if (analogRead(BUTTON_PIN) < ANALOG_THRESHOLD){
+    toggled = !toggled;
+    while (analogRead(BUTTON_PIN) < ANALOG_THRESHOLD) {}
   }
 }

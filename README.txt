@@ -8,14 +8,16 @@ Not sure how these are formatted, Gabe probably knows haha
 [REPO MAP]
 FINAL CODE:
 - final_R1.0
-	- Operations: setup, home electromagnet, moves magnet based on joystick input
+	- Operations: setup, home carriage, moves carriage based on joystick input
 	- edited, slightly consolidated, and improved from Electromagnet_integrated_test_2
 	- Interrupts are attached to pins 2 and 3 and ISR works properly
 	- PennyGoHome function works within a new main::function declared in Arduino's main.cpp 
 	- IDE MODIFICATION REQUIERED: a slight change to main.cpp enables homingSequence() to operate. (a copy of this file is located in the root folder named "modifiedMain.cpp". a name change to "main.cpp" in the correct folder on the compiling machine is required for compilation
 - final_R1.1
+	- Operations: setup, home carriage, moves carriage based on joystick input, pressing button updates available serial 11-byte coordinates and moves carriage accordingly
 	- derived from final_R1.0
-	- ALMOST able to move from coordinate to coordinate
+	- ReadSerial() function added. Reads in 9 bytes to form 2 4-byte coordinates
+	- Able to move from coordinate to coordinate with nonblocking functions
 
 ISOLATED TEST:  (test individual components)
 - collision detection
@@ -30,7 +32,7 @@ ISOLATED TEST:  (test individual components)
 	- turns on led when reading serial
 	- displays ACSII values from serial
 - serial_test_2
-	- ALMOST able to read in coordinates into an array
+	- Able to read two 4-byte coordinates into an array
 - stepper_test
 	- Uses stepper.h
 	- Tests one stepper motor at time
