@@ -5,6 +5,7 @@ support.cls()
 #INTEGRATION BUG_PREVENTION: any division need to be done so that results have no remainders and all products are integers
 #--------------------------- Therefore, board_height // num_col AND board_height // num_rows needs to be a whole, EVEN number
 #--------------------------- Also, board numbers over 9 will cause an error in the isOccupied() function and perhaps serveral other places
+#NOTAS: Key errors are likely trying to reference squares outside of the board
 
 class Position:
     def __init__(self, col: str, row: int):
@@ -28,6 +29,7 @@ class Position:
 
 class Piece:
     def __init__(self, square: str, team: str):
+        assert team == 'White' or team == 'Black'
         assert isinstance(square, str), 'square type must be a string'
         self.square = self._find_first_char_and_int(square)
         self.col, self.row = self.square
@@ -35,18 +37,21 @@ class Piece:
         self.isCaptured = False
         self.team = team
         self._position = Position(self.col, self.row)
+        occupy(self, self.square)
 
     def moveTo(self, square: str):
         square = self._find_first_char_and_int(square)
+        unoccupy(self.square)
         self.square = square
         if isOccupied(square):
             kill(square)
         self.col, self.row = square
         self.row = int(self.row)
         self._position.moveTo(self.col, self.row)
+        occupy(self, square)
 
     def die(self):
-        pass
+        print('die function executed!')
     # TODO: MAKE A FUNTION THAT HANDLES BEING CAPTURED
     # THE SQUARE ATTRIBUTE OF THE self._position SHOULD REFLECT BEING OFF THE BOARD 
     # THE COORDINATES ATTRIBUTE OF THE self._position SHOULD PLACE THE PIECE SOMEHWERE OUT OF THE WAY OF ALL OTHER PIECES/SQUARES
@@ -103,6 +108,21 @@ def set_up_board(num_cols, num_rows):
             board[chr(ord('A') + col)][row] = []
     return board
 
+def occupy(piece: Piece, square: str):
+    assert isinstance(square, str), 'square type must be a str'
+    assert len(square) == 2, 'square length must be 2'
+    assert square.isupper(), 'no col identified'
+    assert square[1].isdigit(), 'no row identified'
+    board[square[0]][int(square[1])] = piece
+
+def unoccupy(square: str):
+    assert isinstance(square, str), 'square type must be a str'
+    assert len(square) == 2, 'square length must be 2'
+    assert square.isupper(), 'no col identified'
+    assert square[1].isdigit(), 'no row identified'
+    board[square[0]][int(square[1])] = []
+
+
 def isOccupied(square: str):
     assert isinstance(square, str), 'square type must be a str'
     assert len(square) == 2, 'square length must be 2'
@@ -113,7 +133,7 @@ def isOccupied(square: str):
     return False
 
 def kill(square: str):
-    board[square[0]][square[1]][0].die() # TODO FIND OUT HOW TO MAKE THIS ONE DIE
+    board[square[0]][int(square[1])].die() # TODO FIND OUT HOW TO MAKE THIS ONE DIE
 
 board_height = 2000 #int(input('Please enter board hieght: '))
 num_cols = 8 #int(input('Please enter number of columns: '))
@@ -121,7 +141,7 @@ num_rows = 8 #int(input('Please enter number of rows: '))
 wall_length = board_height // num_rows
 half_wall_length = wall_length // 2 
 assert isinstance(wall_length, int), "board_height, num_rows, num_cols must all be integers, OR wall_length isn't calculating properly"
-assert board_height / num_rows % 2 == 0, "board_height / num_rows AND board_height / num_cols must be even"
+assert board_height // num_rows % 2 == 0, "board_height / num_rows AND board_height / num_cols must be even"
 board = set_up_board(num_cols, num_rows)
 
 ######################################################## FOR PYTHON SHELL ################################################################
