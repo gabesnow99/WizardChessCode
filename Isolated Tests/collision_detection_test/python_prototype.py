@@ -1,7 +1,3 @@
-import support #type: ignore
-
-support.cls()
-
 #INTEGRATION BUG_PREVENTION: any division need to be done so that results have no remainders and all products are integers
 #--------------------------- Therefore, board_height // num_col AND board_height // num_rows needs to be a whole, EVEN number
 #--------------------------- Also, board numbers over 9 will cause an error in the isOccupied() function and perhaps serveral other places
@@ -133,7 +129,7 @@ def isOccupied(square: str):
     return False
 
 def kill(square: str):
-    board[square[0]][int(square[1])].die() # TODO FIND OUT HOW TO MAKE THIS ONE DIE
+    board[square[0]][int(square[1])].die()
 
 board_height = 2000 #int(input('Please enter board hieght: '))
 num_cols = 8 #int(input('Please enter number of columns: '))
@@ -143,38 +139,3 @@ half_wall_length = wall_length // 2
 assert isinstance(wall_length, int), "board_height, num_rows, num_cols must all be integers, OR wall_length isn't calculating properly"
 assert board_height // num_rows % 2 == 0, "board_height / num_rows AND board_height / num_cols must be even"
 board = set_up_board(num_cols, num_rows)
-
-######################################################## FOR PYTHON SHELL ################################################################
-
-messages = []
-
-def move_piece():
-    new_square = input('\nPlease enter the new location: ')
-    if new_square == '':
-        return True
-    support.cls()
-    pawn.moveTo(new_square)
-    add_massage(f'\nMoved pawn to {new_square}:\n')
-    printm()
-
-def printm():
-    messages.append(pawn.info)
-    for message in messages: print(message)
-
-def add_massage(string: str):
-    messages.append(string)
-
-while True:
-    start = input('Please enter the starting location: ')
-    if start == '':
-        break
-    support.cls()
-    pawn = Piece(start, 'White')
-    add_massage(f'pawn is created at: {start}\n')
-    printm()
-
-    while True:
-        if move_piece():
-            break
-    break
-support.cls()

@@ -1,6 +1,6 @@
 import os
 
-file_path = 'python_prototype.py'
+file_path = 'script.py'
 
 def cls():
     os.system('cls')
@@ -25,5 +25,11 @@ def runp():
 
     exec(content)
 
-def r():
-    print("exec(open('python_prototype.py').read())")
+def s():
+    print("exec(open('script.py', encoding='utf-8').read())")
+
+def p():
+    print("exec(open('python_prototype.py', encoding='utf-8').read())")
+
+def g():
+    print("exec(open('graphics.py', encoding='utf-8').read())")

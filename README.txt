@@ -14,10 +14,12 @@ FINAL CODE:
 	- PennyGoHome function works within a new main::function declared in Arduino's main.cpp 
 	- IDE MODIFICATION REQUIERED: a slight change to main.cpp enables homingSequence() to operate. (a copy of this file is located in the root folder named "modifiedMain.cpp". a name change to "main.cpp" in the correct folder on the compiling machine is required for compilation
 - final_R1.1
-	- Operations: setup, home carriage, moves carriage based on joystick input, pressing button updates available serial 11-byte coordinates and moves carriage accordingly
+	- Operations: setup, home, moves carriage based on joystick input, pressing button updates available serial 11-byte coordinates and moves carriage accordingly
 	- derived from final_R1.0
 	- ReadSerial() function added. Reads in 9 bytes to form 2 4-byte coordinates
 	- Able to move from coordinate to coordinate with nonblocking functions
+- final_R1.2
+	- Test Accuracy of motors
 
 ISOLATED TEST:  (test individual components)
 - collision detection

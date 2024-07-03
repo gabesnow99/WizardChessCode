@@ -71,8 +71,9 @@ void GoWest();
 void ReadSerial();
 void CarriageMoveTo(long x, long y);
 void StarWithin3500();
-void ContinuousTest();
+void ContinuousTest(int msec);
 void WaitForPress();
+void AccuracyTest();
 
 /**************************************************************************************************************/
 void setup() {
@@ -91,6 +92,7 @@ void homingSequence() {
   PennyGoHome();
   interruption = false;
   Serial.println("homingSequence() completed!");
+  Serial.println("*********THIS IS THE START OF THE TEST**************");
 }
 
 void loop() {
@@ -104,18 +106,14 @@ void loop() {
   // CarriageMoveTo(0, 0);
   // UpdateSerial();
 
-  if (toggled) {
-    ReadSerial();
-    toggled = false;
-    delay(300);
-    GoToCoordinates();
-  }
-
-  ReadPeripherals();
-  CheckInterruptProtocal();
-  RunByJoystick();
+  // ReadPeripherals();
+  // CheckInterruptProtocal();
+  // RunByJoystick();
   // UpdateElectromagnet();
   // UpdateSerial();
+
+  ContinuousTest(1000);
+  // AccuracyTest();
 }
 
 /**************************************************************************************************************/
@@ -500,25 +498,48 @@ void StarWithin3500() {
   delay(wait);
 }
 
-void ContinuousTest() {
+void ContinuousTest(int msec) {
   long mid[2] = {EAST_MOTOR_LIMIT / 2, NORTH_MOTOR_LIMIT / 2};
   CarriageMoveTo(0, 0);
+  delay(msec);
   CarriageMoveTo(mid[0], mid[1]);
   CarriageMoveTo(EAST_MOTOR_LIMIT, 0);
+  delay(msec);
   CarriageMoveTo(mid[0], mid[1]);
-  CarriageMoveTo(EAST_MOTOR_LIMIT, NORTH_MOTOR_LIMIT);
+  CarriageMoveTo(EAST_MOTOR_LIMIT, NORTH_MOTOR_LIMIT - 500);
+  delay(msec);
   CarriageMoveTo(mid[0], mid[1]);
-  CarriageMoveTo(NORTH_MOTOR_LIMIT, 0);
+  CarriageMoveTo(0, NORTH_MOTOR_LIMIT - 500);
+  delay(msec);
   CarriageMoveTo(mid[0], mid[1]);
+  delay(msec);
 }
 
 void WaitForPress() {
   toggled = false;
   while (!toggled) {
     digitalWrite(LED_PIN, HIGH);
-    delay(150);
+    delay(125);
     digitalWrite(LED_PIN, LOW);
-    delay(150);
+    delay(125);
     ReadPeripherals();
   }
+  toggled = false;
+}
+
+void AccuracyTest() {
+  long mid[2] = {EAST_MOTOR_LIMIT / 2, NORTH_MOTOR_LIMIT / 2};
+  CarriageMoveTo(0, 0);
+  WaitForPress();
+  CarriageMoveTo(mid[0], mid[1]);
+  CarriageMoveTo(EAST_MOTOR_LIMIT, 0);
+  WaitForPress();
+  CarriageMoveTo(mid[0], mid[1]);
+  CarriageMoveTo(EAST_MOTOR_LIMIT, NORTH_MOTOR_LIMIT - 500);
+  WaitForPress();
+  CarriageMoveTo(mid[0], mid[1]);
+  CarriageMoveTo(0, NORTH_MOTOR_LIMIT - 500);
+  WaitForPress();
+  CarriageMoveTo(mid[0], mid[1]);
+  WaitForPress();
 }
