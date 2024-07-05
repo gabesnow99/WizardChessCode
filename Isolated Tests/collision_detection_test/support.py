@@ -33,3 +33,6 @@ def p():
 
 def g():
     print("exec(open('graphics.py', encoding='utf-8').read())")
+
+def t():
+    print("exec(open('test_script.py', encoding='utf-8').read())")

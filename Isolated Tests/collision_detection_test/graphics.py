@@ -1,4 +1,6 @@
-import support
+#NOTES: Segoe UI Symbol is the terminal font that removes the purple pawn curse. But it does ruin normal character spacing
+
+from python_prototype import board_data
 
 ascii_board = '''  ╔═══╦═══╦═══╦═══╦═══╦═══╦═══╦═══╗
 1 ║   │   │   │   │   │   │   │   ║
@@ -41,34 +43,6 @@ def empty_board():
   ╚═══╩═══╩═══╩═══╩═══╩═══╩═══╩═══╝
     A   B   C   D   E   F   G   H'''
 
-def setup_game():
-    global ascii_board
-    empty_board()
-    for i in range(8):
-        replace(f'{chr(i + ord("A"))}7', chess_pieces[5])
-        replace(f'{chr(i + ord("A"))}2', chess_pieces[11])
-    replace('A8', chess_pieces[2])
-    replace('H8', chess_pieces[2])
-    replace('C8', chess_pieces[3])
-    replace('F8', chess_pieces[3])
-    replace('G8', chess_pieces[4])
-    replace('B8', chess_pieces[4])
-    replace('D8', chess_pieces[0])
-    replace('E8', chess_pieces[1])
-
-    replace('D1', chess_pieces[6])
-    replace('E1', chess_pieces[7])
-    replace('A1', chess_pieces[8])
-    replace('H1', chess_pieces[8])
-    replace('C1', chess_pieces[9])
-    replace('F1', chess_pieces[9])
-    replace('G1', chess_pieces[10])
-    replace('B1', chess_pieces[10])
-
-def print_board():
-    support.cls()
-    print(ascii_board)
-
 def find_square(string: str):
     col = ord(string[0].upper()) - ord('A') + 1
     row = 9 - int(string[1])
@@ -89,10 +63,11 @@ def replace(square: str, new_char: str):
     ascii_board = new_board
 
 def read_in_board(data: str):
-  global ascii_board
-  for i in range():
-      pass
-  return board
+  assert isinstance(data, str), 'read_in_board requires a string'
+  empty_board()
+  for i in range(0, len(data), 4):
+      replace(f'{data[i]}{data[i + 1]}', chess_pieces[int(data[i + 2]) * 10 + int(data[i + 3])])
 
-# setup_game()
-# print_board()
+def show_board():
+    read_in_board(board_data())
+    print(ascii_board)
