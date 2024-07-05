@@ -3,8 +3,11 @@
 #--------------------------- Also, board numbers over 9 will cause an error in the is_occupied() function and perhaps serveral other places
 #NOTES: Key errors are likely trying to reference squares outside of the board
 #------ May not need Piece attribute is_captured
+#------ Piece attributes row and col may be switched out for IUAHEIDJYSGUH
 #------ In C++ it may be better to have setup_pieces() initialize Piece instances to the board, instead of create a list of live white/black pieces
 #------ If we did this, we would also get rid of the piece_code attribute as well
+#------ _find_first_char_and_int() private method should not be needed in C++
+
 from typing import Dict
 
 class Position:
@@ -38,10 +41,8 @@ class Piece:
         self.piece_code = piece_code
         self.type_code = self._determine_type(piece)
         self.square = self._find_first_char_and_int(square)
-        self.col, self.row = self.square
-        self.row = int(self.row)
         self.is_captured = False
-        self._position = Position(self.col, self.row)
+        self._position = Position(self.square[0], int(self.square[1]))
         occupy(self, self.square)
 
     def move_to(self, square: str):
@@ -50,9 +51,7 @@ class Piece:
         self.square = square
         if is_occupied(square):
             kill(square)
-        self.col, self.row = square
-        self.row = int(self.row)
-        self._position.moveTo(self.col, self.row)
+        self._position.moveTo(self.square[0], int(self.square[1]))
         occupy(self, square)
 
     def die(self):
@@ -63,7 +62,7 @@ class Piece:
         else:
             dead_pieces[f'B_{self.type}{self.piece_code}'] = live_black_pieces[f'B_{self.type}{self.piece_code}']
             del live_black_pieces[f'B_{self.type}{self.piece_code}']
-    # TODO: MAKE A FUNTION THAT HANDLES BEING CAPTURED
+    # TODO: FINISH
     # THE SQUARE ATTRIBUTE OF THE self._position SHOULD REFLECT BEING OFF THE BOARD 
     # THE COORDINATES ATTRIBUTE OF THE self._position SHOULD PLACE THE PIECE SOMEHWERE OUT OF THE WAY OF ALL OTHER PIECES/SQUARES
 
@@ -123,9 +122,9 @@ class Piece:
             team = 'White'
         if self.team == 'B':
             team = 'Black'
-        return (f'Captured: {self.is_captured}, Team: {team}'
+        return print(f'Captured: {self.is_captured}, Team: {team}'
                 f'\npawn.x: {self.x}, pawn.y: {self.y}'
-                f'\npawn.col: {self.col}, pawn.row: {self.row}, pawn.square: {self.square}')
+                f'\npawn.square: {self.square}')
     
     # @y.setter
     # def y(self, value: int):
@@ -187,8 +186,8 @@ def kill(square: str):
     board[square[0]][int(square[1])].die()
 
 board_height = 2000 #int(input('Please enter board hieght: '))
-num_cols = 8 #int(input('Please enter number of columns: '))
-num_rows = 8 #int(input('Please enter number of rows: '))
+num_cols = 8
+num_rows = 8
 wall_length = board_height // num_rows
 half_wall_length = wall_length // 2 
 assert isinstance(wall_length, int), "board_height, num_rows, num_cols must all be integers, OR wall_length isn't calculating properly"

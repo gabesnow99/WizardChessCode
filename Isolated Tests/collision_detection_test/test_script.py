@@ -11,7 +11,7 @@ messages = []
 def printm():
     for message in messages: print(message)
 
-def add_massage(string: str):
+def add_massage(string: str): #NOTE DOESN'T SEEM TO BE NEEDED ANYMORE
     messages.append(string)
 
 while True:
