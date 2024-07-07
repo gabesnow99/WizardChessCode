@@ -7,6 +7,8 @@
 #------ In C++ it may be better to have setup_pieces() initialize Piece instances to the board, instead of create a list of live white/black pieces
 #------ If we did this, we would also get rid of the piece_code attribute as well
 #------ _find_first_char_and_int() private method should not be needed in C++
+#------ move_piece() can return values not yet created. This will update memory and the return values will dictate where the motors ACTUALLY go
+#------ move_piece() will run collision detection functions based on the arguments passed in. The values from those functions will be the move_piece() return values
 
 from typing import Dict
 
@@ -57,9 +59,7 @@ class Piece:
     def die(self):
         self.is_captured = True
         col = chr(len(dead_pieces) % 8 + ord('A'))
-        print(col)
         row = len(dead_pieces)// 8 + 9
-        print(row)
         if self.team == 'W':
             dead_pieces[f'W_{self.type}{self.piece_code}'] = live_white_pieces[f'W_{self.type}{self.piece_code}']
             del live_white_pieces[f'W_{self.type}{self.piece_code}']
