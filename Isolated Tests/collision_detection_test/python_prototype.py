@@ -17,7 +17,7 @@ class Position:
         assert isinstance(row, int), 'row type must be int'
         self.coordinates = {'x': self._convert_x(col), 'y': self._convert_y(row)}
 
-    def moveTo(self, col: str, row: int):
+    def move_to(self, col: str, row: int):
         self.coordinates['x'] = self._convert_x(col)
         self.coordinates['y'] = self._convert_y(row)
 
@@ -31,15 +31,15 @@ class Position:
         return half_wall_length + wall_length * (row - 1)
 
 class Piece:
-    def __init__(self, square: str, team: str, piece: str, piece_code: str = ''):
+    def __init__(self, square: str, team: str, type: str, piece_code: str = ''):
         assert team == 'W' or team == 'B'
-        assert piece == 'king' or piece == 'queen' or piece == 'bishop' or piece == 'knight' or piece == 'rook' or piece == 'pawn', 'piece type not specified'
+        assert type == 'king' or type == 'queen' or type == 'bishop' or type == 'knight' or type == 'rook' or type == 'pawn', 'piece type not specified'
         assert piece_code == '' or piece_code.isdigit() and piece_code != '9', 'invalid piece_code'
         assert isinstance(square, str), 'square type must be a string'
         self.team = team
-        self.type = piece
+        self.type = type
         self.piece_code = piece_code
-        self.type_code = self._determine_type(piece)
+        self.type_code = self._determine_type(type)
         self.square = self._find_first_char_and_int(square)
         self.is_captured = False
         self._position = Position(self.square[0], int(self.square[1]))
@@ -51,20 +51,23 @@ class Piece:
         self.square = square
         if is_occupied(square):
             kill(square)
-        self._position.moveTo(self.square[0], int(self.square[1]))
+        self._position.move_to(self.square[0], int(self.square[1]))
         occupy(self, square)
 
     def die(self):
         self.is_captured = True
+        col = chr(len(dead_pieces) % 8 + ord('A'))
+        print(col)
+        row = len(dead_pieces)// 8 + 9
+        print(row)
         if self.team == 'W':
             dead_pieces[f'W_{self.type}{self.piece_code}'] = live_white_pieces[f'W_{self.type}{self.piece_code}']
             del live_white_pieces[f'W_{self.type}{self.piece_code}']
         else:
             dead_pieces[f'B_{self.type}{self.piece_code}'] = live_black_pieces[f'B_{self.type}{self.piece_code}']
             del live_black_pieces[f'B_{self.type}{self.piece_code}']
-    # TODO: FINISH
-    # THE SQUARE ATTRIBUTE OF THE self._position SHOULD REFLECT BEING OFF THE BOARD 
-    # THE COORDINATES ATTRIBUTE OF THE self._position SHOULD PLACE THE PIECE SOMEHWERE OUT OF THE WAY OF ALL OTHER PIECES/SQUARES
+        self._position.move_to(col, row)
+        self.square = col + f'{row}'
 
     def _determine_type(self, piece:str):
         type = 0
