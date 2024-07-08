@@ -3,7 +3,6 @@
 #--------------------------- Also, board numbers over 9 will cause an error in the is_occupied() function and perhaps serveral other places
 #NOTES: Key errors are likely trying to reference squares outside of the board
 #------ May not need Piece attribute is_captured
-#------ Piece attributes row and col may be switched out for IUAHEIDJYSGUH
 #------ In C++ it may be better to have setup_pieces() initialize Piece instances to the board, instead of create a list of live white/black pieces
 #------ If we did this, we would also get rid of the piece_code attribute as well
 #------ _find_first_char_and_int() private method should not be needed in C++
@@ -11,6 +10,7 @@
 #------ move_piece() will run collision detection functions based on the arguments passed in. The values from those functions will be the move_piece() return values
 
 from typing import Dict
+from collision_detection import gcode
 
 class Position:
     def __init__(self, col: str, row: int):
@@ -129,15 +129,13 @@ class Piece:
                 f'\npawn.x: {self.x}, pawn.y: {self.y}'
                 f'\npawn.square: {self.square}')
     
-    # @y.setter
-    # def y(self, value: int):
-    #     self.current_position['y'] = value
-    # TODO WHEN MODIFYING A COORDINATE MODIFY COORDINATE AND ROW OR COLUMN
+    @y.setter
+    def y(self, value: int):
+        self._position.coordinates['y'] = value
     
-    # @x.setter
-    # def x(self, value: int):
-    #     self.current_position['x'] = value
-    # TODO WHEN MODIFYING A COORDINATE MODIFY COORDINATE AND ROW OR COLUMN 
+    @x.setter
+    def x(self, value: int):
+        self._position.coordinates['x'] = value
 
 def create_board(num_cols, num_rows):
     board = {}
@@ -176,19 +174,18 @@ def unoccupy(square: str):
     board[square[0]][int(square[1])] = []
 
 
-def is_occupied(square: str):
+def is_occupied(square: str) -> bool:
     assert isinstance(square, str), 'square type must be a str'
     assert len(square) == 2, 'square length must be 2'
-    assert square.isupper(), 'no col identified'
     assert square[1].isdigit(), 'no row identified'
-    if board[square[0]][int(square[1])]:
+    if board[square[0].upper()][int(square[1])]:
         return True
     return False
 
 def kill(square: str):
     board[square[0]][int(square[1])].die()
 
-board_height = 2000 #int(input('Please enter board hieght: '))
+board_height = 2000
 num_cols = 8
 num_rows = 8
 wall_length = board_height // num_rows
@@ -199,7 +196,9 @@ board: Dict[str, Dict[int, Piece]] = create_board(num_cols, num_rows)
 live_white_pieces: Dict[str, Piece]
 live_black_pieces: Dict[str, Piece]
 live_white_pieces, live_black_pieces = setup_pieces()
-dead_pieces = {}
+dead_pieces: Dict[str, Piece] = {}
+pgn: str = '' #TODO ADD TO THIS STRING EVERYTIME move_piece() IS CALLED. MOVE FORMAT FOUND AT: https://www.chess.com/terms/chess-notation
+              #---- FORMAT FOR THE FIRST PART OF THE PGN IS FOUND AT: https://www.chess.com/terms/chess-pgn
 
 def board_data():
     data = ''
@@ -209,16 +208,19 @@ def board_data():
                 data += f'{board[f"{col}"][row].square}{board[f"{col}"][row].type_code}'
     return data
 
-def move_piece(piece_from: str, to: str):
+def move_piece(piece_from: str, destination: str) -> str: #TODO FINISH FUNCTION IN COLLISION_DETECTION.PY
     assert isinstance(piece_from, str), 'invalid coordinate'
-    assert isinstance(to, str), 'invalid coordinate'
-    assert len(piece_from) == 2 and len(to) == 2, 'invalid coordinate'
-    assert piece_from[0].isalpha() and to[0].isalpha(), 'invalid coordinate'
-    assert piece_from[1].isdigit() and to[1].isdigit(), 'invalid coordinate'
+    assert isinstance(destination, str), 'invalid coordinate'
+    assert len(piece_from) == 2 and len(destination) == 2, 'invalid coordinate'
+    assert piece_from[0].isalpha() and destination[0].isalpha(), 'invalid coordinate'
+    assert piece_from[1].isdigit() and destination[1].isdigit(), 'invalid coordinate'
     piece: Piece = board[piece_from[0].upper()][int(piece_from[1])]
     if not piece:
         raise ValueError('There is no piece here')
+    code: str = gcode(piece_from, destination, is_occupied(destination))
     if piece.team == 'W':
-        live_white_pieces[f'W_{piece.type}{piece.piece_code}'].move_to(to)
+        live_white_pieces[f'W_{piece.type}{piece.piece_code}'].move_to(destination)
     else:
-        live_black_pieces[f'B_{piece.type}{piece.piece_code}'].move_to(to)
+        live_black_pieces[f'B_{piece.type}{piece.piece_code}'].move_to(destination)
+    return code
+    

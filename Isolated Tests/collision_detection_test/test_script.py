@@ -30,6 +30,9 @@ while True:
 cls()
 printm()
 show_board()
+input('Hit enter to show Portable Game Notation (pgn)...')
+print(pgn)
 input('Hit enter to clear screen...')
+
 
 cls()
