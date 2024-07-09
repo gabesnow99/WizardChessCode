@@ -27,10 +27,10 @@ class Position:
         return int(ord(col.upper()) - ord('A') + 1)
     
     def _convert_x(self, col: str):
-        return half_wall_length + wall_length * (self._convert_col(col) - 1)
+        return HALF_WALL_LENGTH + WALL_LENGTH * (self._convert_col(col) - 1)
     
     def _convert_y(self, row: int):
-        return half_wall_length + wall_length * (row - 1)
+        return HALF_WALL_LENGTH + WALL_LENGTH * (row - 1)
 
 class Piece:
     def __init__(self, square: str, team: str, type: str, piece_code: str = ''):
@@ -185,14 +185,14 @@ def is_occupied(square: str) -> bool:
 def kill(square: str):
     board[square[0]][int(square[1])].die()
 
-board_height = 2000
-num_cols = 8
-num_rows = 8
-wall_length = board_height // num_rows
-half_wall_length = wall_length // 2 
-assert isinstance(wall_length, int), "board_height, num_rows, num_cols must all be integers, OR wall_length isn't calculating properly"
-assert board_height // num_rows % 2 == 0, "board_height / num_rows AND board_height / num_cols must be even"
-board: Dict[str, Dict[int, Piece]] = create_board(num_cols, num_rows)
+BOARD_HEIGHT = 2000
+NUM_COLS = 8
+NUM_ROWS = 8
+WALL_LENGTH = BOARD_HEIGHT // NUM_ROWS
+HALF_WALL_LENGTH = WALL_LENGTH // 2 
+assert isinstance(WALL_LENGTH, int), "board_height, num_rows, num_cols must all be integers, OR wall_length isn't calculating properly"
+assert BOARD_HEIGHT // NUM_ROWS % 2 == 0, "board_height / num_rows AND board_height / num_cols must be even"
+board: Dict[str, Dict[int, Piece]] = create_board(NUM_COLS, NUM_ROWS)
 live_white_pieces: Dict[str, Piece]
 live_black_pieces: Dict[str, Piece]
 live_white_pieces, live_black_pieces = setup_pieces()
@@ -222,5 +222,10 @@ def move_piece(piece_from: str, destination: str) -> str: #TODO FINISH FUNCTION 
         live_white_pieces[f'W_{piece.type}{piece.piece_code}'].move_to(destination)
     else:
         live_black_pieces[f'B_{piece.type}{piece.piece_code}'].move_to(destination)
-    return code
+    # TEMPORARY ./
+    coord1 = [HALF_WALL_LENGTH + WALL_LENGTH * (int(ord(piece_from[0].upper()) - ord('A') + 1) - 1), HALF_WALL_LENGTH + WALL_LENGTH * (int(piece_from[1]) - 1)]
+    coord2 = [HALF_WALL_LENGTH + WALL_LENGTH * (int(ord(destination[0].upper()) - ord('A') + 1) - 1), HALF_WALL_LENGTH + WALL_LENGTH * (int(destination[1]) - 1)]
+    # TEMPORARY /.
+    # return code
+    return print(coord1, coord2)
     

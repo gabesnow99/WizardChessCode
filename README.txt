@@ -1,6 +1,3 @@
-Not sure how these are formatted, Gabe probably knows haha
-(do we have a big README or do we need one for each sketch?)
-
 *Folders in repository are in full caps
 *Sub Folders (including only the sketch file) are listed as bullet points
 *Sketch file attributes are listed one indent inside each corresponding subfolder
@@ -12,14 +9,25 @@ FINAL CODE:
 	- edited, slightly consolidated, and improved from Electromagnet_integrated_test_2
 	- Interrupts are attached to pins 2 and 3 and ISR works properly
 	- PennyGoHome function works within a new main::function declared in Arduino's main.cpp 
-	- IDE MODIFICATION REQUIERED: a slight change to main.cpp enables homingSequence() to operate. (a copy of this file is located in the root folder named "modifiedMain.cpp". a name change to "main.cpp" in the correct folder on the compiling machine is required for compilation
+	- IDE MODIFICATION REQUIERED: a slight change to main.cpp enables homingSequence() to operate
+	- A copy of this file is located in the root folder named "modifiedMain.cpp"
+	- example destination: "C:\Users\joshu\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.5\cores\arduino\main.cpp"
 - final_R1.1
 	- Operations: setup, home, moves carriage based on joystick input, pressing button updates available serial 11-byte coordinates and moves carriage accordingly
-	- derived from final_R1.0
+	- Derived from final_R1.0
 	- ReadSerial() function added. Reads in 9 bytes to form 2 4-byte coordinates
 	- Able to move from coordinate to coordinate with nonblocking functions
 - final_R1.2
+	- Derived from R1.1
 	- Test Accuracy of motors
+- final_R1.3
+	- Derived from R1.2 AND python_prototype.py, test_script.py from the Isolated Tests/collision_detection folder
+	- A virtual board is created mapped to the carriage's range
+	- Serial communication reads in the parameters for moveTo() (i think thats that function... not sure) 
+	- move_piece() moves the carriage from one square to another on the board
+	- edited UpdateElectromagnet arugument to a Boolean
+	- #include Chess.h from the same folder (TODO: rename to Piece.h and create more header files with other functions to clear up readability
+	- #include Definitions.h which has a reference chess board showing corresponding index numbers to each square and all #define pieces
 
 ISOLATED TEST:  (test individual components)
 - collision detection
