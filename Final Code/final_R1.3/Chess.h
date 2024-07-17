@@ -16,6 +16,16 @@ struct Square {
   Square(char file, char rank) : file(file), rank(rank),
                                 x(HALF_WALL_LENGTH + int(file - 'A') * WALL_LENGTH),
                                 y(HALF_WALL_LENGTH + int(rank - '1') * WALL_LENGTH) {}
+
+  void setFile(char file) {
+    this->file = file;
+    this->x = HALF_WALL_LENGTH + int(file - 'A') * WALL_LENGTH;
+  }
+
+  void setRank(char rank) {
+    this->rank = rank;
+    this->y = HALF_WALL_LENGTH + int(rank - '1') * WALL_LENGTH;
+  }
 };
 
 class Piece {

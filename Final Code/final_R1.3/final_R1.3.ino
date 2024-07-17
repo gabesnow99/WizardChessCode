@@ -2,7 +2,7 @@
 // NOTE: having a separate homingSequence() {} overrides the bug that triggers the ISR prematurely immediately following setup(), caused by homing the carriage
 // NOTE: having an unmodified main.cpp may run but not execute the homingSequence() {} function
 // NOTE: Board Height is edited in the Definitions.h header file
-// NOTE: PIECE CREATION must be declared globally, and initialized in setup(). I could not figure out another way
+// NOTE: PIECE CREATION must be declare "pieces" globally, and initialize it in setup(). I could not figure out another way
 
 #include <AccelStepper.h>
 #include <MultiStepper.h>
@@ -40,8 +40,12 @@ int button_val = 0;
 int cycle_speed = 0;
 int EW_speed = 0;
 int NS_speed = 0;
+bool debug_flag = false;
 int debug_counter = 0;
 long coordinates[2] = {0};
+Square testSquare('A', '1');
+Square testSquareMid('D', '5');
+Square testSquare2('D', '8');
 unsigned long last_time = 0;
 bool toggled = false;
 bool switch_val = false;
@@ -132,10 +136,13 @@ void homingSequence() {
   PennyGoHome();
   interruption = false;
   Serial.println("homingSequence() completed!");
+  Serial.println("************THIS IS THE START OF THE TEST**************");
 }
 
 void loop() {
   ReadPeripherals();
+  CheckInterruptProtocal();
+  RunByJoystick();
   // if (toggled) {
   //   toggled = !toggled;
   //   Square a = UserInputSquare();
@@ -161,38 +168,40 @@ void loop() {
   //   Serial.println(b.y);
   // }
 
-  if (toggled) {
-    toggled = !toggled;
-    int piece = BK;
-    Square newSquare = UserInputSquare();
-    Serial.print("User moved piece from: ");
-    Serial.print(pieces[piece]->getSquare().file);
-    Serial.print(" ");
-    Serial.print(pieces[piece]->getSquare().rank);
-    Serial.print(" ");
-    Serial.print(pieces[piece]->getSquare().x);
-    Serial.print(" ");
-    Serial.println(pieces[piece]->getSquare().y);
-    CarriageMoveTo(pieces[piece]->getSquare().x, pieces[piece]->getSquare().y);
-    UpdateElectromagnet(true);
-    delay(1000);
-    Serial.print("And moved it to: ");
-    pieces[piece]->moveTo(newSquare);
-    Serial.print(pieces[piece]->getSquare().file);
-    Serial.print(" ");
-    Serial.print(pieces[piece]->getSquare().rank);
-    Serial.print(" ");
-    Serial.print(pieces[piece]->getSquare().x);
-    Serial.print(" ");
-    Serial.println(pieces[piece]->getSquare().y);
-    CarriageMoveTo(pieces[piece]->getSquare().x, pieces[piece]->getSquare().y);
-    UpdateElectromagnet(false);
-    Serial.println("Sending Penny home once more...");
-    CarriageMoveTo(-200, -200);
-    Serial.print("Well done, everyone!!  .... oops going a bit too far...");
-    CarriageMoveTo(0, -300);
+  // if (toggled) {
+  //   toggled = !toggled;
+  //   int piece = BK;
+  //   Square newSquare = UserInputSquare();
+  //   Serial.print("User moved piece from: ");
+  //   Serial.print(pieces[piece]->getSquare().file);
+  //   Serial.print(" ");
+  //   Serial.print(pieces[piece]->getSquare().rank);
+  //   Serial.print(" ");
+  //   Serial.print(pieces[piece]->getSquare().x);
+  //   Serial.print(" ");
+  //   Serial.println(pieces[piece]->getSquare().y);
+  //   CarriageMoveTo(pieces[piece]->getSquare().x, pieces[piece]->getSquare().y);
+  //   UpdateElectromagnet(true);
+  //   delay(1000);
+  //   Serial.print("And moved it to: ");
+  //   pieces[piece]->moveTo(newSquare);
+  //   Serial.print(pieces[piece]->getSquare().file);
+  //   Serial.print(" ");
+  //   Serial.print(pieces[piece]->getSquare().rank);
+  //   Serial.print(" ");
+  //   Serial.print(pieces[piece]->getSquare().x);
+  //   Serial.print(" ");
+  //   Serial.println(pieces[piece]->getSquare().y);
+  //   CarriageMoveTo(pieces[piece]->getSquare().x, pieces[piece]->getSquare().y);
+  //   UpdateElectromagnet(false);
+  //   Serial.println("Sending Penny home once more...");
+  //   CarriageMoveTo(-200, -200);
+  //   Serial.print("Well done, everyone!!");
+  // }
+
+  while(toggled) {
+    EMTest();
   }
-  RunByJoystick();
 }
 
 /**************************************************************************************************************/
@@ -621,4 +630,53 @@ void AccuracyTest() {
   WaitForPress();
   CarriageMoveTo(mid[0], mid[1]);
   WaitForPress();
+}
+
+void EMTest() {
+  ReadPeripherals();
+
+  switch (debug_counter) {
+    case 0:
+      debug_counter = 1;
+      testSquare.setFile('A');
+      testSquare.setRank('4');
+      testSquare2.setFile('D');
+      testSquare2.setRank('8');
+      break;
+    
+    case 1:
+      debug_counter = 2;
+      testSquare.setFile('D');
+      testSquare.setRank('8');
+      testSquare2.setFile('H');
+      testSquare2.setRank('5');
+      break;
+
+    case 2:
+      debug_counter = 3;
+      testSquare.setFile('H');
+      testSquare.setRank('5');
+      testSquare2.setFile('E');
+      testSquare2.setRank('1');
+      break;
+
+    case 3:
+      debug_counter = 0;
+      testSquare.setFile('E');
+      testSquare.setRank('1');
+      testSquare2.setFile('A');
+      testSquare2.setRank('4');
+      break;
+
+  }
+
+  Serial.print("MOVING PIECE TO SQUARE: ");
+  Serial.print(testSquare2.file);
+  Serial.println(testSquare2.rank);
+  CarriageMoveTo(testSquare.x, testSquare.y);
+  UpdateElectromagnet(true);
+  CarriageMoveTo(testSquare2.x, testSquare2.y);
+  UpdateElectromagnet(false);
+  CarriageMoveTo(testSquareMid.x, testSquareMid.y);
+  Serial.print("PIECE MOVED!!");
 }

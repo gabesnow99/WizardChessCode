@@ -32,7 +32,8 @@ FINAL CODE:
 ISOLATED TEST:  (test individual components)
 - collision detection
 	- WILL USE serial communication to predict the quickest path from two squares while avoiding other pieces
-	- WILL be an edit from from the final_R1.0 file and WILL contribute to final_R1.1, evenually
+	- WILL be an edit from from the final_R1.0 file and WILL contribute to final_R1.1, eventually
+	- PYTHON PROTOTYPE: Graphically displays pieces and moves them, storing their locations and lists of live White/Black pieces, and dead pieces.
 - full_gantry_test
 	- Uses stepper.h
 	- Uses serial command line to move each axis
