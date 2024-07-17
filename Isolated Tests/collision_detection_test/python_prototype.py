@@ -215,17 +215,13 @@ def move_piece(piece_from: str, destination: str) -> str: #TODO FINISH FUNCTION 
     assert piece_from[0].isalpha() and destination[0].isalpha(), 'invalid coordinate'
     assert piece_from[1].isdigit() and destination[1].isdigit(), 'invalid coordinate'
     piece: Piece = board[piece_from[0].upper()][int(piece_from[1])]
+    is_kill = is_occupied(destination)
     if not piece:
         raise ValueError('There is no piece here')
-    code: str = gcode(piece_from, destination, is_occupied(destination))
+    # code: str = gcode(piece_from, destination, is_kill) #BUG
     if piece.team == 'W':
         live_white_pieces[f'W_{piece.type}{piece.piece_code}'].move_to(destination)
     else:
         live_black_pieces[f'B_{piece.type}{piece.piece_code}'].move_to(destination)
-    # TEMPORARY ./
-    coord1 = [HALF_WALL_LENGTH + WALL_LENGTH * (int(ord(piece_from[0].upper()) - ord('A') + 1) - 1), HALF_WALL_LENGTH + WALL_LENGTH * (int(piece_from[1]) - 1)]
-    coord2 = [HALF_WALL_LENGTH + WALL_LENGTH * (int(ord(destination[0].upper()) - ord('A') + 1) - 1), HALF_WALL_LENGTH + WALL_LENGTH * (int(destination[1]) - 1)]
-    # TEMPORARY /.
-    # return code
-    return print(coord1, coord2)
+    return True if is_kill else False
     

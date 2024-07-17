@@ -1,6 +1,6 @@
 #NOTES: Segoe UI Symbol is the terminal font that removes the purple pawn curse. But it does ruin normal character spacing
 
-from python_prototype import board_data
+from python_prototype import board_data, board
 
 ASCII_BOARD_TEMPLATE = '''  ╔═══╦═══╦═══╦═══╦═══╦═══╦═══╦═══╗
 8 ║   │   │   │   │   │   │   │   ║
@@ -36,7 +36,6 @@ def find_square(string: str) -> int:
 
 def replace(square: str, new_char: str):
     global ascii_board
-    i = 0
     index = find_square(square)
     ascii_board = ascii_board[:index] + new_char + ascii_board[index + 1:]
 
@@ -49,3 +48,31 @@ def read_in_board(data: str):
 def show_board():
     read_in_board(board_data())
     print(ascii_board)
+
+def return_board():
+    read_in_board(board_data())
+    return ascii_board
+
+def return_txt_board():
+    global ascii_board
+    read_in_board(board_data())
+    big_count =  0
+
+    # Convert string to list of characters
+    ascii_board_list = list(ascii_board)
+    
+    for i, rank in enumerate('87654321'):
+        lil_count = 0
+        for j, file in enumerate('ABCDEFGH'):
+            index = find_square(file + rank)
+            char = ascii_board[index]
+            if char == ' ':
+                lil_count += 1
+                if lil_count % 5 != 0:
+                    ascii_board_list.insert(index + big_count - 1, '\u0020')
+                    big_count += 1
+    for i in range(28, -1, -4):
+        ascii_board_list.insert(-i - 1, ' ')
+    # Convert list back to string
+    ascii_board_modified = ''.join(ascii_board_list)
+    return ascii_board_modified
