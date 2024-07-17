@@ -401,11 +401,12 @@ void GoToCoordinates() {
 }
 
 void ReadSerial() {
-  String data = "";
+  String received = "";
 
   while (Serial.available() > 0) {
-    #TODO THIS
+    received = Serial.readString();
   }
+  #TODO THIS
 }
 
 void ReadSerial() {
