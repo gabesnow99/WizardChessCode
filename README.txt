@@ -4,6 +4,12 @@
 
 [REPO MAP]
 FINAL CODE:
+- final_BETA
+	- This is the offical BETA test
+	- OPERATIONS: setup(), homingSequence, loop()
+	- loop(): constantly reads in serial. if serial packet is validated it runs that code. repeats
+	- the codes sent in are waypoints which also update the electromagnet
+	- Communication from serial comes via python
 - final_R1.0
 	- Operations: setup, home carriage, moves carriage based on joystick input
 	- edited, slightly consolidated, and improved from Electromagnet_integrated_test_2

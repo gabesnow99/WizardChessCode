@@ -4,6 +4,7 @@
 
 #include <AccelStepper.h>
 #include <MultiStepper.h>
+#include <String.h>
 
 // GLOBAL INTEGERS
 #define ANALOG_THRESHOLD 505   // offset from 512 because of joystick calibration
@@ -41,7 +42,8 @@ int debug_counter = 0;
 long coordinates[2] = {0};
 unsigned long last_time = 0;
 bool toggled = false;
-bool switch_val = false;
+bool availableMove = false;
+bool status = false;
 volatile bool interruption = false;
 AccelStepper EW_motor(MOTOR_INTERFACE, 9, 11, 10, 12);
 AccelStepper NS_motor(MOTOR_INTERFACE, 5, 7, 6, 8);
@@ -77,7 +79,7 @@ void WaitForPress();
 /**************************************************************************************************************/
 void setup() {
   delay(1000); // NOTE: (line optional) prevents the setup from running when compiling the code from the computer
-  Serial.begin(115200); 
+  Serial.begin(9600); 
   Serial.println("setup() initiated...");
   PinSetup();
   MotorSetup();
@@ -94,28 +96,10 @@ void homingSequence() {
 }
 
 void loop() {
-  // if (toggled) {
-  //   UpdateSerial();
-  //   toggled = false;
-  // }
 
-  // delay(5000);
-  // StarWithin3500();
-  // CarriageMoveTo(0, 0);
-  // UpdateSerial();
 
-  if (toggled) {
-    ReadSerial();
-    toggled = false;
-    delay(300);
-    GoToCoordinates();
-  }
+  CarriageMove();
 
-  ReadPeripherals();
-  CheckInterruptProtocal();
-  RunByJoystick();
-  // UpdateElectromagnet();
-  // UpdateSerial();
 }
 
 /**************************************************************************************************************/
@@ -393,13 +377,13 @@ void GoToCoordinates() {
     ReadPeripherals();
     if (NS_pot > ANALOG_THRESHOLD + DEADZONE_VAL) {
       Serial.println("Will not go. (Delay 1 second)");
-      switch_val = false;
+      status = false;
       delay(1000);
       return;
     }
     if (NS_pot < ANALOG_THRESHOLD - DEADZONE_VAL) {
       Serial.println("Moving...");
-      switch_val = true;
+      status = true;
       break;
     }
     digitalWrite(LED_PIN, HIGH);
@@ -417,6 +401,14 @@ void GoToCoordinates() {
 }
 
 void ReadSerial() {
+  String data = "";
+
+  while (Serial.available() > 0) {
+    #TODO THIS
+  }
+}
+
+void ReadSerial() {
   int index = 0;
   int count = 0;
   int serial[9] = {0};
@@ -430,8 +422,8 @@ void ReadSerial() {
   }
   while (Serial.available() > 0) {Serial.read();}
 
-  switch_val = (serial[4] == ',' - '0') ? true : false; // CHECKS FOR ',' at index 4
-  switch (switch_val) {
+  status = (serial[4] == ',' - '0') ? true : false; // CHECKS FOR ',' at index 4
+  switch (status) {
     case true:
       Serial.println("printing serial data...");
       serial[4] = ',';
@@ -458,8 +450,11 @@ void ReadSerial() {
   }
 }
 
-void CarriageMoveTo(long x, long y) {
-  long coordinates[2] = {x, y};
+void CarriageMove() {
+  if (!availableMove) {
+    return;
+  }
+  availableMove = false;
   Serial.print("moving to x:");
   Serial.print(coordinates[0]);
   Serial.print(" y:");

@@ -7,15 +7,17 @@ pygame.init()
 # Define constants
 # Some constants are defined in python_prototype
 SCREEN_WIDTH = 600
-SCREEN_HEIGHT = 400
+SCREEN_HEIGHT = 600
 
 # Define colors
-BG = (102, 178, 200)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
+BLUE2 = (102, 178, 200)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+BROWN = (139, 69, 19)
+GREY = (152, 152, 152)
 
 # Setup Display
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -49,7 +51,7 @@ def request_state():
                     print(f'Route entered so far: {squares}')
                 else:
                     squares += (pygame.key.name(event.key))
-    print(f'Route entered so far: {squares}')
+    print(f'Route: {squares}')
 
 # Create a display simulation state function
 def simulation_state():
@@ -57,9 +59,14 @@ def simulation_state():
     global route
 
     # Fill background
-    screen.fill(BG)
+    screen.fill(BLUE2)
 
     # Draw Board
+    board = pygame.Rect(100, 50, 400, 400)
+    pygame.draw.rect(screen, GREY, board)
+    boarder = pygame.Rect(100, 50, 400, 400)
+    pygame.draw.rect(screen, BLACK, boarder, 7)
+    pygame.draw.line(screen, BROWN, (0, 0), (600, 600), 5)
 
     # Update display
     pygame.display.flip()
