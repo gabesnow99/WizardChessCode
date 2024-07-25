@@ -4,7 +4,6 @@
 
 #include <AccelStepper.h>
 #include <MultiStepper.h>
-#include <String.h>
 
 // GLOBAL INTEGERS
 #define ANALOG_THRESHOLD 505   // offset from 512 because of joystick calibration
@@ -19,6 +18,8 @@
 #define INTERRUPT_OFFEST 100
 #define EAST_MOTOR_LIMIT 3672  // Testing the EW limit 5 times we reached these step counts (3988, 3979, 3946, 3975, 3971)
 #define NORTH_MOTOR_LIMIT 4637 // Testing the EW limit 5 times we reached these step counts (4917, 4980, 4916 ... larger than EAST_MOTOR_LIMIT) NOTE: These tests where approximated, the switch was not wired up
+#define RELATIVE_BOARD_DATUM_EW -192
+#define RELATIVE_BOARD_DATUM_NS -232
 
 // ANALOG PINS
 #define EW_PIN A4              // VRy on joystick board
@@ -39,6 +40,8 @@ int cycle_speed = 0;
 int EW_speed = 0;
 int NS_speed = 0;
 int debug_counter = 0;
+char received[15] = {' '};
+char codes[4] = {' '};
 long coordinates[2] = {0};
 unsigned long last_time = 0;
 bool toggled = false;
@@ -63,6 +66,8 @@ void RunByJoystick();
 void UpdateElectromagnet();
 void CheckInterruptProtocal();
 void GoToCoordinates();
+void ReadSerial2();
+void CarriageMove();
 
 // AUXILARY FUNCTIONS
 void HandleInterrupt();
@@ -79,7 +84,7 @@ void WaitForPress();
 /**************************************************************************************************************/
 void setup() {
   delay(1000); // NOTE: (line optional) prevents the setup from running when compiling the code from the computer
-  Serial.begin(9600); 
+  Serial.begin(115200); 
   Serial.println("setup() initiated...");
   PinSetup();
   MotorSetup();
@@ -96,10 +101,14 @@ void homingSequence() {
 }
 
 void loop() {
-
-
+  ReadSerial2();
   CarriageMove();
-
+  ReadPeripherals();
+  RunByJoystick();
+  if (toggled) {
+    UpdateSerial();
+    toggled = false;
+  }
 }
 
 /**************************************************************************************************************/
@@ -144,7 +153,7 @@ void PennyGoHome() {
     NS_motor.runSpeed();
   }
 
-  NS_motor.move(300);
+  NS_motor.move(300 + RELATIVE_BOARD_DATUM_NS);
   NS_motor.setSpeed(SPEED);
 
   while (NS_motor.distanceToGo() != 0) {
@@ -166,7 +175,7 @@ void PennyGoHome() {
     EW_motor.runSpeed();
   }
 
-  EW_motor.move(300);
+  EW_motor.move(300 + RELATIVE_BOARD_DATUM_EW);
   EW_motor.setSpeed(SPEED);
 
   while (EW_motor.distanceToGo() != 0) {
@@ -192,8 +201,8 @@ void ReadPeripherals() {
 
 void UpdateSerial() {
   // VARIABLES
-  Serial.print("Cycle Speed: ");
-  Serial.print(millis() - last_time);
+  // Serial.print("Cycle Speed: ");
+  // Serial.print(millis() - last_time);
   // Serial.print(" toggled: ");
   // Serial.print(toggled);
   Serial.print(" EW_motor.currentPosition: ");
@@ -230,18 +239,20 @@ void RunByJoystick() {
   if (EW_pot > ANALOG_THRESHOLD + DEADZONE_VAL || EW_pot < ANALOG_THRESHOLD - DEADZONE_VAL) {
     EW_speed = map(EW_pot, 0, 1023, SPEED, -SPEED);
     EW_motor.setSpeed(EW_speed);
+    CheckInterruptProtocal();
     EW_motor.runSpeed();
   }
 
   if (NS_pot > ANALOG_THRESHOLD + DEADZONE_VAL || NS_pot < ANALOG_THRESHOLD - DEADZONE_VAL) {
     NS_speed = map(NS_pot, 0, 1023, SPEED, -SPEED);
     NS_motor.setSpeed(NS_speed);
+    CheckInterruptProtocal();
     NS_motor.runSpeed();
   }
 }
 
-void UpdateElectromagnet() {
-  if (toggled) {
+void UpdateElectromagnet(bool val) {
+  if (val) {
     digitalWrite(LED_PIN, HIGH);
     digitalWrite(EM_PIN, HIGH);
   } else {
@@ -400,13 +411,51 @@ void GoToCoordinates() {
   Serial.println("Arrived!");
 }
 
-void ReadSerial() {
-  String received = "";
-
-  while (Serial.available() > 0) {
-    received = Serial.readString();
+void ReadSerial2() {
+  if (Serial.available() <= 0) {
+    return;
   }
-  #TODO THIS
+
+  //<^0000,0000_00>  <(Open) >(Close) 0000,0000(Coordinate destination format) ^(EM  on) _(EM off) 00(instruction code. 01=1 02=2 21=21... for pythong to verify a step wasn't missed)
+  delay(50);
+  while (Serial.available() > 0) {
+    for (int i = 0; i < 15; i++) {
+      received[i] = Serial.read();
+    }
+  }
+  while (Serial.available() > 0) {
+    Serial.read();
+  }
+
+  if (received[0] == '<' && received[6] == ',' && received[14] == '>') {
+    availableMove = true;
+
+    coordinates[0] = 0;
+    coordinates[1] = 0;
+    codes[0] = codes[1] = codes[2] = codes[3] = ' ';
+
+    int j = 1000;
+    for (int i = 2; i < 6; i++) {
+      coordinates[0] += (received[i] - '0') * j;
+      coordinates[1] += (received[i + 5] - '0') * j;
+      j /= 10;
+    }
+    codes[0] = char(received[1]);   // UDATE ELECTROMAGNET BEFORE MOVE
+    codes[1] = char(received[11]);  // UDATE ELECTROMAGNET AFTER MOVE
+    codes[2] = char(received[12]);  // FIRST PYTHON CODE DIGIT
+    codes[3] = char(received[13]);  // SECOND PYTHON CODE DIGIT
+
+    for (int i; i < 15; i++) {
+      received[i] = ' '; //<^0000,0000_AA>  <(Open) >(Close) 0000,0000(Coordinate destination format) ^(EM  on) _(EM off) AA(instruction code. AA=1 AB=2 AC3... for pythong to verify a step wasn't missed)
+    }
+
+  } else {
+    Serial.println("INVALID DATA RECEIVED");
+    for (int i = 0; i < 15; i++) {
+      received[i] = ' ';
+    }
+  }
+  return;
 }
 
 void ReadSerial() {
@@ -455,18 +504,31 @@ void CarriageMove() {
   if (!availableMove) {
     return;
   }
-  availableMove = false;
-  Serial.print("moving to x:");
-  Serial.print(coordinates[0]);
-  Serial.print(" y:");
-  Serial.print(coordinates[1]);
-  Serial.print("... ");
+
+  UpdateElectromagnet((codes[0] == '^') ? true : false);
+  // Serial.print("EM:");
+  // Serial.print(codes[0]);
+  // Serial.print(" Moving to x:");
+  // Serial.print(coordinates[0]);
+  // Serial.print(" y:");
+  // Serial.print(coordinates[1]);
+  // Serial.print("... ");
   carriage.moveTo(coordinates);
   while (NS_motor.distanceToGo() != 0 || EW_motor.distanceToGo() != 0) {
     CheckInterruptProtocal();
     carriage.run();
   }
-  Serial.println("Arrived!");
+  // Serial.print("Arrived! EM:");
+  // Serial.print(codes[1]);
+  // Serial.print(" Waypoint code:");
+  // Serial.print(codes[2]);
+  // Serial.println(codes[3]);
+  UpdateElectromagnet((codes[1] == '^') ? true : false);
+  Serial.print(codes[2]);
+  Serial.println(codes[3]);
+
+  availableMove = false;
+  return;
 }
 
 void StarWithin3500() {

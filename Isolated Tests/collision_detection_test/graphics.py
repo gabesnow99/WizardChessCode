@@ -1,6 +1,6 @@
 #NOTES: Segoe UI Symbol is the terminal font that removes the purple pawn curse. But it does ruin normal character spacing
 
-from python_prototype import board_data, board
+from python_prototype import *
 
 ASCII_BOARD_TEMPLATE = '''  ╔═══╦═══╦═══╦═══╦═══╦═══╦═══╦═══╗
 8 ║   │   │   │   │   │   │   │   ║
@@ -22,11 +22,19 @@ ASCII_BOARD_TEMPLATE = '''  ╔═══╦═══╦═══╦═══╦�
     A   B   C   D   E   F   G   H'''
 CHESS_PIECES = ['♔', '♕', '♖', '♗', '♘', '♙', '♚', '♛', '♜', '♝', '♞', '♟']
 
+default_game = ''
 ascii_board = ASCII_BOARD_TEMPLATE
 
-def empty_board():
+def install_game(game_to_instal: Game):
+  global default_game
+  default_game = game_to_instal
+  print(default_game.board_data())
+
+def empty_board(game: Game = default_game):
     global ascii_board
     ascii_board = ASCII_BOARD_TEMPLATE
+    game.clear_off_pieces()
+
 
 def find_square(string: str) -> int:
     col = ord(string[0].upper()) - ord('A') + 1
@@ -40,22 +48,23 @@ def replace(square: str, new_char: str):
     ascii_board = ascii_board[:index] + new_char + ascii_board[index + 1:]
 
 def read_in_board(data: str):
+  global ascii_board
+  ascii_board = ASCII_BOARD_TEMPLATE
   assert isinstance(data, str), 'read_in_board requires a string'
-  empty_board()
   for i in range(0, len(data), 4):
       replace(f'{data[i]}{data[i + 1]}', CHESS_PIECES[int(data[i + 2]) * 10 + int(data[i + 3])])
 
-def show_board():
-    read_in_board(board_data())
+def show_board(game: Game = default_game):
+    read_in_board(game.board_data())
     print(ascii_board)
 
-def return_board():
-    read_in_board(board_data())
+def return_board(game: Game = default_game):
+    read_in_board(game.board_data())
     return ascii_board
 
-def return_txt_board():
+def return_txt_board(game: Game = default_game):
     global ascii_board
-    read_in_board(board_data())
+    read_in_board(game.board_data())
     big_count =  0
 
     # Convert string to list of characters
@@ -73,6 +82,7 @@ def return_txt_board():
                     big_count += 1
     for i in range(28, -1, -4):
         ascii_board_list.insert(-i - 1, ' ')
+
     # Convert list back to string
     ascii_board_modified = ''.join(ascii_board_list)
     return ascii_board_modified

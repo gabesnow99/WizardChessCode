@@ -199,8 +199,14 @@ void loop() {
   //   Serial.print("Well done, everyone!!");
   // }
 
-  while(toggled) {
-    EMTest();
+  // while(toggled) { // EM CONSISTENCY TEST
+  //   EMTest();
+  // }
+
+  if (toggled) {
+    UpdateElectromagnet(true);
+  } else {
+    UpdateElectromagnet(false);
   }
 }
 

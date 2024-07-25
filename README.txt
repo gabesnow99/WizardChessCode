@@ -7,11 +7,12 @@ FINAL CODE:
 - final_BETA
 	- This is the offical BETA test
 	- OPERATIONS: setup(), homingSequence, loop()
-	- loop(): constantly reads in serial. if serial packet is validated it runs that code. repeats
-	- the codes sent in are waypoints which also update the electromagnet
+	- loop(): constantly reads in serial. if waypoint packet is validated it runs CarriageMove() otherwise joystick has control
+	- the codes sent are waypoints which also update the electromagnet
+	-toggling send current X/Y pos
 	- Communication from serial comes via python
 - final_R1.0
-	- Operations: setup, home carriage, moves carriage based on joystick input
+	- OPERATIONS: setup, home carriage, moves carriage based on joystick input
 	- edited, slightly consolidated, and improved from Electromagnet_integrated_test_2
 	- Interrupts are attached to pins 2 and 3 and ISR works properly
 	- PennyGoHome function works within a new main::function declared in Arduino's main.cpp 
@@ -19,7 +20,7 @@ FINAL CODE:
 	- A copy of this file is located in the root folder named "modifiedMain.cpp"
 	- example destination: "C:\Users\joshu\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.5\cores\arduino\main.cpp"
 - final_R1.1
-	- Operations: setup, home, moves carriage based on joystick input, pressing button updates available serial 11-byte coordinates and moves carriage accordingly
+	- OPERATIONS: setup, home, moves carriage based on joystick input, pressing button updates available serial 11-byte coordinates and moves carriage accordingly
 	- Derived from final_R1.0
 	- ReadSerial() function added. Reads in 9 bytes to form 2 4-byte coordinates
 	- Able to move from coordinate to coordinate with nonblocking functions
@@ -27,6 +28,9 @@ FINAL CODE:
 	- Derived from R1.1
 	- Test Accuracy of motors
 - final_R1.3
+	- OPERATIONS: setup() homeingSequence() loop()
+	- loop(): moves carriage via joystick. Button press prints current X/Y pos and toggles the EM
+	-loop(): can also comment out part of code to run the electromagnet consistency test
 	- Derived from R1.2 AND python_prototype.py, test_script.py from the Isolated Tests/collision_detection folder
 	- A virtual board is created mapped to the carriage's range
 	- Serial communication reads in the parameters for moveTo() (i think thats that function... not sure) 

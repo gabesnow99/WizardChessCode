@@ -1,84 +1,75 @@
-import pygame
 import sys
-import python_prototype
+from globals import *
 
-pygame.init()
+def event_handler():
+    global running
 
-# Define constants
-# Some constants are defined in python_prototype
-SCREEN_WIDTH = 600
-SCREEN_HEIGHT = 600
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                running = False
 
-# Define colors
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
-BLUE = (0, 0, 255)
-BLUE2 = (102, 178, 200)
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-BROWN = (139, 69, 19)
-GREY = (152, 152, 152)
+def draw_blank_board():
+    WIN.fill(FILL)
+    pygame.draw.rect(WIN, BROWN, BOARD)
+    pygame.draw.rect(WIN, BLACK, BOARDER, 10)
 
-# Setup Display
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption('Route Test')
+    index = 0
+    for file in 'ABCDEFGH':
+        rank_text = RANK_FILE_FONT.render(str(file), 1, DARK_GREEN)
+        WIN.blit(rank_text, RANK_POSITIONS[index])
+        index += 1
+    index = 0
+    for rank in range(1, 9):
+        file_text = RANK_FILE_FONT.render(str(rank), 1, DARK_GREEN)
+        WIN.blit(file_text, FILE_POSITIONS[index])
+        index += 1
 
-# Define lists for board by lines
-outside_lines = []
-inside_lines = []
+    for i in range(8, 64):
+        x = BOARD.x + i // 8 * WALL_LENGTH
+        start_y = BOARD.y + i % 8 * WALL_LENGTH
+        end_y = BOARD.y + (i % 8 + 1) * WALL_LENGTH - 1
+        pygame.draw.line(WIN, BLACK, (x, start_y), (x, end_y), 3)
+    for i in range(8, 64):
+        start_x = BOARD.x + i % 8 * WALL_LENGTH
+        end_x = BOARD.x + (i % 8 + 1) * WALL_LENGTH - 1
+        y = BOARD.y + i // 8 * WALL_LENGTH
+        pygame.draw.line(WIN, BLACK, (start_x, y), (end_x, y), 3)
 
-# Define squares and route
-squares = ''
-route = []
+    fps_counter_text = COUNTER_FONT.render('number of frames: ' + str(fps_counter), 1, BLACK)
+    fps_counter_rectangle = fps_counter_text.get_rect()
+    WIN.blit(fps_counter_text, (WIDTH - fps_counter_rectangle.width - 15, HEIGHT - 30))
 
-# Create a request input state function
-def request_state():
-    global run
-    global squares
+def highlight_wall_collisions():
+    pass
 
-    while len(squares) != 4:
+def draw_window():
+    draw_blank_board()
+    highlight_wall_collisions()
 
-        #event handler
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-                return
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    run = False
-                    return
-                elif event.key == pygame.K_RETURN:
-                    print(f'Route entered so far: {squares}')
-                else:
-                    squares += (pygame.key.name(event.key))
-    print(f'Route: {squares}')
+    pygame.display.update()
 
-# Create a display simulation state function
-def simulation_state():
-    global squares
-    global route
+def main():
+    global fps_counter
+    global running
+    global update
 
-    # Fill background
-    screen.fill(BLUE2)
+    update = True
+    clock = pygame.time.Clock()
+    fps_counter = 0
+    running = True
+    while running:
+        clock.tick(FPS)
+        event_handler()
+        if update:
+            fps_counter += 1
+            draw_window()
+            update = False
 
-    # Draw Board
-    board = pygame.Rect(100, 50, 400, 400)
-    pygame.draw.rect(screen, GREY, board)
-    boarder = pygame.Rect(100, 50, 400, 400)
-    pygame.draw.rect(screen, BLACK, boarder, 7)
-    pygame.draw.line(screen, BROWN, (0, 0), (600, 600), 5)
+    pygame.quit()
+    sys.exit()
 
-    # Update display
-    pygame.display.flip()
-
-    # Reset route
-    squares = ''
-
-# Run game
-run = True
-while run:
-    simulation_state()
-    request_state()
-
-pygame.quit()
-sys.exit()
+if __name__ == '__main__':
+    main()
