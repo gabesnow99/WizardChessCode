@@ -1,6 +1,8 @@
 // NOTE: main.cpp was modified to include homingSequence() {}, therefore if the IDE is updated we may need to modify this file again
 // NOTE: having a separate homingSequence() {} overrides the bug that triggers the ISR prematurely immediately following setup(), caused by homing the carriage
 // NOTE: having an unmodified main.cpp may run but not execute the homingSequence() {} function
+// NOTE: FOR PYTHON's SAKE please leave fun Serial.print() formatting for the homing sequence and then only send codes via Serial.write()
+// -----   this may prevent rare unpredictable behavior and is standard practice for byte serial sharing. Further fun formatting can happen in python  
 
 #include <AccelStepper.h>
 #include <MultiStepper.h>
@@ -98,6 +100,7 @@ void homingSequence() {
   PennyGoHome();
   interruption = false;
   Serial.println("homingSequence() completed!");
+  Serial.write("\n@"); // CODE FOR PYTHON
 }
 
 void loop() {
@@ -524,8 +527,8 @@ void CarriageMove() {
   // Serial.print(codes[2]);
   // Serial.println(codes[3]);
   UpdateElectromagnet((codes[1] == '^') ? true : false);
-  Serial.print(codes[2]);
-  Serial.println(codes[3]);
+  Serial.write(codes[2]);
+  Serial.write(codes[3]);
 
   availableMove = false;
   return;
