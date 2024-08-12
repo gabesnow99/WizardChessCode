@@ -1,21 +1,23 @@
-Don't touch the _pychache_ folder. It is for the interpreter.
+
+
+_pychache_ folder: Don't touch. It is for the interpreter.
+
+resources folder: for GUI.py
+
+_TEST_SCRIPT.py for early troubleshooting serial communication
 
 collision_detection probably needs to be renamed rout_planner (and then finished)
 
-DELTE_THIS is probably meant to be deleted
-
 final_BETA is Penny's little mind
-
-globals makes route_test a little cleaner
 
 graphics is terminal character graphical display of python_prototype 
 
-python_prototype.py is a prototype game class that will be transferred to .ino when complete (maybe)
+GUI is pygame GUI for penny (needs to implement python_prototype.py) NOTE: FULLSCREEN SCALE FACTOR
 
-rout_test is a pygame graphical display of the game (or will be)
+python_prototype.py is a prototype game class that will be transferred to .ino when complete (maybe)
 
 script is the file that runs the game and communicates with Penny
 
 support.py is a list of support functions useful in the interpreter for dynamic debugging in the shell
 
-Wizzard chess results are the results of the scripts last game! (when python_prototype starts working again)
+Wizzard chess results are the results of the scripts last game! (when python_prototype starts working again, should add a .json export as well)

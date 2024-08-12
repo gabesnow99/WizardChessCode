@@ -22,15 +22,15 @@ ASCII_BOARD_TEMPLATE = '''  ╔═══╦═══╦═══╦═══╦�
     A   B   C   D   E   F   G   H'''
 CHESS_PIECES = ['♔', '♕', '♖', '♗', '♘', '♙', '♚', '♛', '♜', '♝', '♞', '♟']
 
-default_game = ''
+DEFAULT_GAME = ''
 ascii_board = ASCII_BOARD_TEMPLATE
 
 def install_game(game_to_instal: Game):
-  global default_game
-  default_game = game_to_instal
-  print(default_game.board_data())
+  global DEFAULT_GAME
+  DEFAULT_GAME = game_to_instal
+  print(DEFAULT_GAME.board_data())
 
-def empty_board(game: Game = default_game):
+def empty_board(game: Game = DEFAULT_GAME):
     global ascii_board
     ascii_board = ASCII_BOARD_TEMPLATE
     game.clear_off_pieces()
@@ -54,15 +54,15 @@ def read_in_board(data: str):
   for i in range(0, len(data), 4):
       replace(f'{data[i]}{data[i + 1]}', CHESS_PIECES[int(data[i + 2]) * 10 + int(data[i + 3])])
 
-def show_board(game: Game = default_game):
+def show_board(game: Game = DEFAULT_GAME):
     read_in_board(game.board_data())
     print(ascii_board)
 
-def return_board(game: Game = default_game):
+def return_board(game: Game = DEFAULT_GAME):
     read_in_board(game.board_data())
     return ascii_board
 
-def return_txt_board(game: Game = default_game):
+def return_txt_board(game: Game = DEFAULT_GAME):
     global ascii_board
     read_in_board(game.board_data())
     big_count =  0

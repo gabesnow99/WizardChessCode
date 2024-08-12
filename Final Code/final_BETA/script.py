@@ -12,7 +12,7 @@ import time
 
 SERIAL_PORT = 'COM6'
 BAUD_RATE = 115200
-SER = serial.Serial(SERIAL_PORT, BAUD_RATE)
+SER = None #serial.Serial(SERIAL_PORT, BAUD_RATE)
     
 cls()
 
@@ -115,26 +115,26 @@ def convert_coord(coord: int) -> str:
         return '000' + str(coord)
     
 # *********** TEST BLOCKED SHELL ************  
-connect_to_Penny()
-running = True
-print('Penny is listening... be carefule what you tell her.')
-while running:
-    for i in range(4):
-        tell_Penny('<^0000,0000_12>')
-        wait_for_code('<^0000,0000_12>')
-        tell_Penny('<^1000,1000_89>')
-        wait_for_code('<^1000,1000_89>')
-    usr_input = input()
-    if usr_input:
-        running = False
-        hit_a_home_run_Penny()
+# connect_to_Penny()
+# running = True
+# print('Penny is listening... be carefule what you tell her.')
+# while running:
+#     for i in range(4):
+#         tell_Penny('<^0000,0000_12>')
+#         wait_for_code('<^0000,0000_12>')
+#         tell_Penny('<^1000,1000_89>')
+#         wait_for_code('<^1000,1000_89>')
+#     usr_input = input()
+#     if usr_input:
+#         running = False
+#         hit_a_home_run_Penny()
 
-input('Enter to close serial communication') # NOTE Something odd happens. if we delete this line Penny restarts everytime after hit_a_home_run_Penny()
-SER.close()
-input('Enter to exit')
-cls()
-print('test complete')
-sys.exit()
+# input('Enter to close serial communication') # NOTE Something odd happens. if we delete this line Penny restarts everytime after hit_a_home_run_Penny()
+# SER.close()
+# input('Enter to exit')
+# cls()
+# print('test complete')
+# sys.exit()
 # *********** TEST BLOCKED SHELL ************  
 
 ######################################################## FOR PYTHON SHELL ################################################################
@@ -142,7 +142,7 @@ game = Game()
 install_game(game)
 messages = []
 next_message = ''
-connect_to_Penny()
+# connect_to_Penny()
 
 def printm():
     print('\n')

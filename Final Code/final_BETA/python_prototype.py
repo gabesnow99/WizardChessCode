@@ -59,27 +59,27 @@ class Piece:
             self.self2 = self
             self._position = Position(self.square[0], int(self.square[1]))
             print(self.square)
-            Game._occupy(self.game, self, self.square)
+            self.game._occupy(self, self.square)
 
         def move_to(self, square: str):
             square = self._find_first_char_and_int(square)
-            Game._unoccupy(self.game, self.square)
+            self.game._unoccupy(self.square)
             self.square = square
-            if Game._is_occupied(square):
-                Game._kill(square)
+            if self.game._is_occupied(square):
+                self.game._kill(square)
             self._position.move_to(self.square[0], int(self.square[1]))
-            Game._occupy(self.game, self, self.square)
+            self.game._occupy(self, self.square)
 
         def die(self):
             self.is_captured = True
-            col = chr(len(Game.dead_pieces) % 8 + ord('A'))
-            row = len(Game.dead_pieces)// 8 + 9
+            col = chr(len(self.game.dead_pieces) % 8 + ord('A'))
+            row = len(self.game.dead_pieces)// 8 + 9
             if self.team == 'W':
-                Game.dead_pieces[f'W_{self.type}{self.piece_code}'] = Game.live_white_pieces[f'W_{self.type}{self.piece_code}']
-                del Game.live_white_pieces[f'W_{self.type}{self.piece_code}']
+                self.game.dead_pieces[f'W_{self.type}{self.piece_code}'] = self.game.live_white_pieces[f'W_{self.type}{self.piece_code}']
+                del self.game.live_white_pieces[f'W_{self.type}{self.piece_code}']
             else:
-                Game.dead_pieces[f'B_{self.type}{self.piece_code}'] = Game.live_black_pieces[f'B_{self.type}{self.piece_code}']
-                del Game.live_black_pieces[f'B_{self.type}{self.piece_code}']
+                self.game.dead_pieces[f'B_{self.type}{self.piece_code}'] = self.game.live_black_pieces[f'B_{self.type}{self.piece_code}']
+                del self.game.live_black_pieces[f'B_{self.type}{self.piece_code}']
             self._position.move_to(col, row)
             self.square = col + f'{row}'
 
