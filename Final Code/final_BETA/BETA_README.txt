@@ -12,7 +12,7 @@ final_BETA is Penny's little mind
 
 graphics is terminal character graphical display of python_prototype 
 
-GUI is pygame GUI for penny (needs to implement python_prototype.py) NOTE: FULLSCREEN SCALE FACTOR
+GUI is pygame GUI for penny (needs to implement python_prototype.py) NOTE: scale_factor is unique to the system display scale. If there are errors on a different machine, try setting to 1 and switching system display scale to 100% in machine settings. 
 
 python_prototype.py is a prototype game class that will be transferred to .ino when complete (maybe)
 

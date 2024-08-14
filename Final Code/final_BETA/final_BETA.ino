@@ -9,7 +9,6 @@
 
 // GLOBAL INTEGERS
 #define ANALOG_THRESHOLD 505   // offset from 512 because of joystick calibration
-#define SPR 2038               // steps per revolution
 #define SPEED 500
 #define NORTH 250              // N,S,E,W vals tell us which direction the pots are oriented from ~512
 #define SOUTH 750
@@ -38,17 +37,14 @@
 int EW_pot = 0;
 int NS_pot = 0;
 int button_val = 0;
-int cycle_speed = 0;
 int EW_speed = 0;
 int NS_speed = 0;
-int debug_counter = 0;
-char received[15] = {' '};
-char codes[4] = {' '};
-long coordinates[2] = {0};
+long coordinates[9][2] = {0};
+char codes[9][4] = {' '};
+
 unsigned long last_time = 0;
 bool toggled = false;
 bool availableMove = false;
-bool status = false;
 volatile bool interruption = false;
 AccelStepper EW_motor(MOTOR_INTERFACE, 9, 11, 10, 12);
 AccelStepper NS_motor(MOTOR_INTERFACE, 5, 7, 6, 8);
@@ -65,23 +61,19 @@ void PennyGoHome();
 void ReadPeripherals();
 void UpdateSerial();
 void RunByJoystick();
-void UpdateElectromagnet();
-void CheckInterruptProtocal();
-void GoToCoordinates();
-void ReadSerial2();
-void CarriageMove();
+void ReadInSerial();
+void MoveCarriage();
 
 // AUXILARY FUNCTIONS
 void HandleInterrupt();
+void CheckInterruptProtocal();
+void UpdateElectromagnet();
 void GoNorth();
 void GoSouth();
 void GoEast();
 void GoWest();
-void ReadSerial();
-void CarriageMoveTo(long x, long y);
-void StarWithin3500();
-void ContinuousTest();
-void WaitForPress();
+void HandleReceived(char* waypoint, int code1, int code2);
+void MoveToCoordinate(long* coordArray, char* codeArray);
 
 /**************************************************************************************************************/
 void setup() {
@@ -97,15 +89,15 @@ void setup() {
 
 void homingSequence() {
   Serial.println("homingSequence() initiated...");
-  PennyGoHome();
+  // PennyGoHome();
   interruption = false;
   Serial.println("homingSequence() completed!");
   Serial.write("\n@"); // CODE FOR PYTHON
 }
 
 void loop() {
-  ReadSerial2();
-  CarriageMove();
+  ReadInSerial();
+  MoveCarriage();
   ReadPeripherals();
   RunByJoystick();
   if (toggled) {
@@ -379,204 +371,92 @@ void GoWest() {
     EW_motor.runSpeed();
 }
 
-void GoToCoordinates() {
-  Serial.print("COORDINATES x: ");
-  Serial.print(coordinates[0]);
-  Serial.print(", y: ");
-  Serial.println(coordinates[1]);
-  Serial.println("Go to these coordinates?");
-  Serial.println("North == Yes || South == No");
-  toggled = false;
-  while (true) {
-    ReadPeripherals();
-    if (NS_pot > ANALOG_THRESHOLD + DEADZONE_VAL) {
-      Serial.println("Will not go. (Delay 1 second)");
-      status = false;
-      delay(1000);
-      return;
-    }
-    if (NS_pot < ANALOG_THRESHOLD - DEADZONE_VAL) {
-      Serial.println("Moving...");
-      status = true;
-      break;
-    }
-    digitalWrite(LED_PIN, HIGH);
-    delay(125);
-    digitalWrite(LED_PIN, LOW);
-    delay(125);
-  }
-
-  carriage.moveTo(coordinates);
-  while (NS_motor.distanceToGo() != 0 || EW_motor.distanceToGo() != 0) {
-    CheckInterruptProtocal();
-    carriage.run();
-  }
-  Serial.println("Arrived!");
-}
-
-void ReadSerial2() {
+void ReadInSerial() {
   if (Serial.available() <= 0) {
     return;
   }
 
-  //<^0000,0000_00>  <(Open) >(Close) 0000,0000(Coordinate destination format) ^(EM  on) _(EM off) 00(instruction code. 01=1 02=2 21=21... for pythong to verify a step wasn't missed)
-  delay(50);
-  while (Serial.available() > 0) {
-    for (int i = 0; i < 15; i++) {
+  //<^0000,0000_##>  <(Open) >(Close) 0000,0000(Coordinate destination format) ^(EM  on) _(EM off) ##(instruction code. first # is current waypoint. second # is final waypoint. for python to verify a step wasn't missed)
+  delay(75);
+  char received[15] = {' '};
+  for (int i = 0; i < 15; i++) {
       received[i] = Serial.read();
-    }
   }
+  
+  int code1 = received[12] - '0' - 1;
+  int code2 = received[13] - '0' - 1;
+  HandleReceived(received, code1, code2);
+  while (code1 < code2) {
+    while (Serial.available() > 0) {
+      for (int i = 0; i < 15; i++) {
+        received[i] = Serial.read();
+      }
+      code1 = received[12] - '0';
+    }
+    HandleReceived(received, code1, code2);
+  }
+
   while (Serial.available() > 0) {
     Serial.read();
   }
 
-  if (received[0] == '<' && received[6] == ',' && received[14] == '>') {
-    availableMove = true;
-
-    coordinates[0] = 0;
-    coordinates[1] = 0;
-    codes[0] = codes[1] = codes[2] = codes[3] = ' ';
-
-    int j = 1000;
-    for (int i = 2; i < 6; i++) {
-      coordinates[0] += (received[i] - '0') * j;
-      coordinates[1] += (received[i + 5] - '0') * j;
-      j /= 10;
-    }
-    codes[0] = char(received[1]);   // UDATE ELECTROMAGNET BEFORE MOVE
-    codes[1] = char(received[11]);  // UDATE ELECTROMAGNET AFTER MOVE
-    codes[2] = char(received[12]);  // FIRST PYTHON CODE DIGIT
-    codes[3] = char(received[13]);  // SECOND PYTHON CODE DIGIT
-
-    for (int i; i < 15; i++) {
-      received[i] = ' '; //<^0000,0000_AA>  <(Open) >(Close) 0000,0000(Coordinate destination format) ^(EM  on) _(EM off) AA(instruction code. AA=1 AB=2 AC3... for pythong to verify a step wasn't missed)
-    }
-
-  } else {
-    Serial.println("INVALID DATA RECEIVED");
-    for (int i = 0; i < 15; i++) {
-      received[i] = ' ';
-    }
-  }
+  availableMove = true;
+  Serial.write('@');
   return;
 }
 
-void ReadSerial() {
-  int index = 0;
-  int count = 0;
-  int serial[9] = {0};
-
-  Serial.println("reading in serial...");
-  while (Serial.available() > 0) {
-    serial[index] = Serial.read() - '0';
-    index += 1;
-    count += 1;
-    if (count >= 9) { break; }
-  }
-  while (Serial.available() > 0) {Serial.read();}
-
-  status = (serial[4] == ',' - '0') ? true : false; // CHECKS FOR ',' at index 4
-  switch (status) {
-    case true:
-      Serial.println("printing serial data...");
-      serial[4] = ',';
-      coordinates[0] = serial[0] * 1000 + serial[1] * 100 + serial[2] * 10 + serial[3];
-      coordinates[1] = serial[5] * 1000 + serial[6] * 100 + serial[7] * 10 + serial[8];
-      Serial.print(coordinates[0]);
-      Serial.print(", ");
-      Serial.println(coordinates[1]);
-
-      index = 0;
-      count = 0;
-      for (int i = 0; i < 9; i++) {
-        serial[i] = 0;
-      }
-      break;
-    case false:
-      Serial.println("INVALID COORDINATE FORMAT");
-      index = 0;
-      count = 0;
-      for (int i = 0; i < 9; i++) {
-        serial[i] = 0;
-      }
-      break;
-  }
-}
-
-void CarriageMove() {
+void MoveCarriage() {
   if (!availableMove) {
     return;
   }
 
-  UpdateElectromagnet((codes[0] == '^') ? true : false);
-  // Serial.print("EM:");
-  // Serial.print(codes[0]);
-  // Serial.print(" Moving to x:");
-  // Serial.print(coordinates[0]);
-  // Serial.print(" y:");
-  // Serial.print(coordinates[1]);
-  // Serial.print("... ");
-  carriage.moveTo(coordinates);
+  int numMoves = codes[0][3] - '0';
+  for (int i = 0; i < numMoves; i++) {
+    // MoveToCoordinate(coordinates[i], codes[i]);
+    Serial.print(coordinates[i][0]);
+    Serial.print(' ');
+    Serial.println(coordinates[i][1]);
+    Serial.print(codes[i][0]);
+    Serial.print(' ');
+    Serial.print(codes[i][1]);
+    Serial.print(' ');
+    Serial.print(codes[i][2]);
+    Serial.print(' ');
+    Serial.println(codes[i][3]);
+  }
+
+  availableMove = false;
+}
+
+void MoveToCoordinate(long* coordArray, char* codeArray) {
+  UpdateElectromagnet((codeArray[0] == '^') ? true : false);
+  carriage.moveTo(coordArray);
   while (NS_motor.distanceToGo() != 0 || EW_motor.distanceToGo() != 0) {
     CheckInterruptProtocal();
     carriage.run();
   }
-  // Serial.print("Arrived! EM:");
-  // Serial.print(codes[1]);
-  // Serial.print(" Waypoint code:");
-  // Serial.print(codes[2]);
-  // Serial.println(codes[3]);
-  UpdateElectromagnet((codes[1] == '^') ? true : false);
-  Serial.write(codes[2]);
-  Serial.write(codes[3]);
-
-  availableMove = false;
-  return;
+  UpdateElectromagnet((codeArray[1] == '^') ? true : false);
+  Serial.write(codeArray[2]);
+  Serial.write(codeArray[3]);
 }
 
-void StarWithin3500() {
-  int wait = 5000;
-  CarriageMoveTo(3500, 1750);
-  delay(wait);
-  CarriageMoveTo(2895, 2582);
-  delay(wait);
-  CarriageMoveTo(2290, 3414);
-  delay(wait);
-  CarriageMoveTo(1312, 3096);
-  delay(wait);
-  CarriageMoveTo(334, 2778);
-  delay(wait);
-  CarriageMoveTo(334, 1750);
-  delay(wait);
-  CarriageMoveTo(334, 721);
-  delay(wait);
-  CarriageMoveTo(1312, 402);
-  delay(wait);
-  CarriageMoveTo(2290, 85);
-  delay(wait);
-  CarriageMoveTo(2895, 917);
-  delay(wait);
-}
+void HandleReceived(char* received, int code1, int code2) {
+  if (received[0] == '<' && received[6] == ',' && received[14] == '>') {
+    coordinates[code1][0] = 0;
+    coordinates[code1][1] = 0;
+    int j = 1000;
+    for (int i = 2; i < 6; i++) {
+      coordinates[code1][0] += (received[i] - '0') * j;
+      coordinates[code1][1] += (received[i + 5] - '0') * j;
+      j /= 10;
+    }
+    codes[code1][0] = received[1];   // UDATE ELECTROMAGNET BEFORE MOVE
+    codes[code1][1] = received[11];  // UDATE ELECTROMAGNET AFTER MOVE
+    codes[code1][2] = received[12];  // FIRST PYTHON CODE CODE
+    codes[code1][3] = received[13];  // SECOND PYTHON CODE CODE
 
-void ContinuousTest() {
-  long mid[2] = {EAST_MOTOR_LIMIT / 2, NORTH_MOTOR_LIMIT / 2};
-  CarriageMoveTo(0, 0);
-  CarriageMoveTo(mid[0], mid[1]);
-  CarriageMoveTo(EAST_MOTOR_LIMIT, 0);
-  CarriageMoveTo(mid[0], mid[1]);
-  CarriageMoveTo(EAST_MOTOR_LIMIT, NORTH_MOTOR_LIMIT);
-  CarriageMoveTo(mid[0], mid[1]);
-  CarriageMoveTo(NORTH_MOTOR_LIMIT, 0);
-  CarriageMoveTo(mid[0], mid[1]);
-}
-
-void WaitForPress() {
-  toggled = false;
-  while (!toggled) {
-    digitalWrite(LED_PIN, HIGH);
-    delay(150);
-    digitalWrite(LED_PIN, LOW);
-    delay(150);
-    ReadPeripherals();
+  } else {
+    Serial.println("INVALID DATA RECEIVED. CARRIAGE NOT MOVED");
+    availableMove = false;
   }
 }
