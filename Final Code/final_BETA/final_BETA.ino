@@ -72,7 +72,7 @@ void GoNorth();
 void GoSouth();
 void GoEast();
 void GoWest();
-void HandleReceived(char* waypoint, int code1, int code2);
+void HandleReceived(char* waypoint, int code1);
 void MoveToCoordinate(long* coordArray, char* codeArray);
 
 /**************************************************************************************************************/
@@ -89,7 +89,7 @@ void setup() {
 
 void homingSequence() {
   Serial.println("homingSequence() initiated...");
-  // PennyGoHome();
+  PennyGoHome();
   interruption = false;
   Serial.println("homingSequence() completed!");
   Serial.write("\n@"); // CODE FOR PYTHON
@@ -385,7 +385,7 @@ void ReadInSerial() {
   
   int code1 = received[12] - '0' - 1;
   int code2 = received[13] - '0' - 1;
-  HandleReceived(received, code1, code2);
+  HandleReceived(received, code1);
   while (code1 < code2) {
     while (Serial.available() > 0) {
       for (int i = 0; i < 15; i++) {
@@ -393,7 +393,7 @@ void ReadInSerial() {
       }
       code1 = received[12] - '0';
     }
-    HandleReceived(received, code1, code2);
+    HandleReceived(received, code1);
   }
 
   while (Serial.available() > 0) {
@@ -412,17 +412,7 @@ void MoveCarriage() {
 
   int numMoves = codes[0][3] - '0';
   for (int i = 0; i < numMoves; i++) {
-    // MoveToCoordinate(coordinates[i], codes[i]);
-    Serial.print(coordinates[i][0]);
-    Serial.print(' ');
-    Serial.println(coordinates[i][1]);
-    Serial.print(codes[i][0]);
-    Serial.print(' ');
-    Serial.print(codes[i][1]);
-    Serial.print(' ');
-    Serial.print(codes[i][2]);
-    Serial.print(' ');
-    Serial.println(codes[i][3]);
+    MoveToCoordinate(coordinates[i], codes[i]);
   }
 
   availableMove = false;
@@ -437,10 +427,10 @@ void MoveToCoordinate(long* coordArray, char* codeArray) {
   }
   UpdateElectromagnet((codeArray[1] == '^') ? true : false);
   Serial.write(codeArray[2]);
-  Serial.write(codeArray[3]);
 }
 
-void HandleReceived(char* received, int code1, int code2) {
+void HandleReceived(char* received, int code1) {
+  Serial.print("code1:"); Serial.print(code1); // BUG WHY IS THIS VALUE NOT CHANGING
   if (received[0] == '<' && received[6] == ',' && received[14] == '>') {
     coordinates[code1][0] = 0;
     coordinates[code1][1] = 0;
@@ -454,6 +444,7 @@ void HandleReceived(char* received, int code1, int code2) {
     codes[code1][1] = received[11];  // UDATE ELECTROMAGNET AFTER MOVE
     codes[code1][2] = received[12];  // FIRST PYTHON CODE CODE
     codes[code1][3] = received[13];  // SECOND PYTHON CODE CODE
+    // Serial.print("code1:");Serial.print(code1);
 
   } else {
     Serial.println("INVALID DATA RECEIVED. CARRIAGE NOT MOVED");

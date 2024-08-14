@@ -7,6 +7,7 @@ if __name__ != '__main__':
 from support import *
 from python_prototype import *
 from graphics import *
+import GUI #NOTE LEAVE AS import to preserve namespace errors with Piece class etc
 import serial
 import time
 
@@ -43,8 +44,8 @@ def tell_Penny(string: str, loud: bool = True):
     a_secret = bytes(string, 'utf-8')
     SER.write(a_secret)
 
-def wait_for_code(waypoint, timeout=30, loop=.1):
-    code = waypoint[12:14]
+def wait_for_code(code, timeout=30, loop=.1):
+    code = code
     start_time = time.time()
     data = b''
     while True:
@@ -63,20 +64,19 @@ def wait_for_code(waypoint, timeout=30, loop=.1):
 def hit_a_home_run_Penny():
     print('Hit a home run, Penny!\n"OKAY!," said Penny.')
     waypoints = [
-    '<^0000,0000_01>',
-    '<^3000,0000_02>',
-    '<^2925,0668_03>',
-    '<^2703,1302_04>',
-    '<^2345,1870_05>',
-    '<^1870,2345_06>',
-    '<^1302,2703_07>',
-    '<^0668,2925_08>',
-    '<^0000,3000_09>',
-    '<^0000,0000_10>'
-    ]
+    '<^0000,0000_19>',
+    '<^3000,0000_29>',
+    '<^2925,0668_39>',
+    '<^2703,1302_49>',
+    '<^2345,1870_59>',
+    '<^1870,2345_69>',
+    '<^1302,2703_79>',
+    '<^0668,2925_89>',
+    '<^0000,0000_99>'
+    ] #'<^0000,3000_09>' is the second to last in the homerun series but right now penny only takes 9 waypoints at a time
     for waypoint in waypoints:
         tell_Penny(waypoint, False)
-        wait_for_code(waypoint)
+        wait_for_code('@')
     print('''"I'm aaaall done! :)," said Penny.\nWell done, Penny! Well done.''')
 
 def move_piece_IRL(piece_to_move: str, destination_square: str, is_kill: bool) -> str:
@@ -88,7 +88,7 @@ def move_piece_IRL(piece_to_move: str, destination_square: str, is_kill: bool) -
     waypoints.append(waytpoint)
     for waypoint in waypoints:
         SER.write(waypoint)
-        wait_for_code(waypoint)
+        wait_for_code('@')
         
     return waypoints
 
@@ -120,10 +120,10 @@ def convert_coord(coord: int) -> str:
 # print('Penny is listening... be carefule what you tell her.')
 # while running:
 #     for i in range(4):
-#         tell_Penny('<^0000,0000_12>')
-#         wait_for_code('<^0000,0000_12>')
-#         tell_Penny('<^1000,1000_89>')
-#         wait_for_code('<^1000,1000_89>')
+#         tell_Penny('<^0000,0000_11>')
+#         wait_for_code('@')
+#         tell_Penny('<^1000,1000_11>')
+#         wait_for_code('@')
 #     usr_input = input()
 #     if usr_input:
 #         running = False
@@ -211,6 +211,6 @@ def file_export():
         for char in string:
             file.write(char)
 
-SER.close()
+# SER.close()
 file_export()
 cls()
