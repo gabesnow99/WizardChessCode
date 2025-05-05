@@ -11,7 +11,8 @@ response_definition = 'Limit your response to moves via standard algebraic game 
 fen_definition = "I will send you the board position via fen notation. Capital letters represent white pieces and lower case letters represent black pieces. The notation's first character begins by representing the A8 square. Each following character represents B8, C8, all the way to H8 on the 8th rank. After the '/' character the following characters represent A7 through H7 sqaures of the 7th rank all the way down to the 1st rank. Any digits represent the number of empty squares on that rank before the next letter. "
 previous_move_definition = 'From now on, I will send you my next move. It will be in standard algebraic notaion. For example a8c6 moves the piece on a8 to c6. If there is a piece on c6, the a8 piece will capture it. '
 
-# set for local machine
+# set path for local machine in side the ENV file
+load_dotenv()
 stockfish = Stockfish(os.getenv("STOCKFISH_PATH"))
 stockfish.set_depth(20)
 stockfish.set_elo_rating(3500)
@@ -24,7 +25,6 @@ stockfish.update_engine_parameters({
 })
 
 board = chess.Board()
-load_dotenv()
 client = OpenAI(
     api_key=os.getenv("API_KEY"),
 )
