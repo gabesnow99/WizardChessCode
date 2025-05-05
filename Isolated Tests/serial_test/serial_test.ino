@@ -8,6 +8,8 @@ Serial.begin(9600); //start talking with the computer. 9600 just tells the rate.
 pinMode(led, OUTPUT);
 }
 
+void homingSequence() {};
+
 void loop()
 {
 if (Serial.available() > 0) //Serial.available will tell the board to look at the information being sent to it through the serial port.
