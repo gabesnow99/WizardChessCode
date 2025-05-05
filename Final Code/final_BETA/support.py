@@ -1,6 +1,6 @@
 import os
 
-file_path = 'script.py'
+file_path = 'GUI.py'
 
 def cls():
     os.system('cls')

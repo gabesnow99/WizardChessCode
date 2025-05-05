@@ -377,7 +377,7 @@ void ReadInSerial() {
   }
 
   //<^0000,0000_##>  <(Open) >(Close) 0000,0000(Coordinate destination format) ^(EM  on) _(EM off) ##(instruction code. first # is current waypoint. second # is final waypoint. for python to verify a step wasn't missed)
-  delay(75);
+  delay(50);
   char received[15] = {' '};
   for (int i = 0; i < 15; i++) {
       received[i] = Serial.read();
@@ -388,12 +388,13 @@ void ReadInSerial() {
   HandleReceived(received, code1);
   while (code1 < code2) {
     while (Serial.available() > 0) {
+      delay(50); // NEVER TESTED! MIGHT FIX BUG
       for (int i = 0; i < 15; i++) {
         received[i] = Serial.read();
       }
       code1 = received[12] - '0';
+      HandleReceived(received, code1); // MOVED INSIDE WHILE LOOP1! NEVER TESTED! MIGHT FIX BUG (IF SO DELETE 391)
     }
-    HandleReceived(received, code1);
   }
 
   while (Serial.available() > 0) {

@@ -1,13 +1,13 @@
 import sys
 
 if __name__ != '__main__':
-    print("__name__ != '__main__'\nNo Code was executed")
+    print("__name__ != '__main__'\nNo script.py code was executed")
     sys.exit()
 
 from support import *
 from python_prototype import *
 from graphics import *
-import GUI #NOTE LEAVE AS import to preserve namespace errors with Piece class etc
+# import GUI #NOTE LEAVE AS import to preserve namespace errors with Piece class etc
 import serial
 import time
 
@@ -20,13 +20,18 @@ cls()
 ######################################################## FOR ARDUINO ################################################################
 def connect_to_Penny():
     print(f'connecting to {SERIAL_PORT}... ', end='')
-    wait = True
-    while wait:
+    timeout = 1000
+    while True:
         if SER.is_open:
             break
+        time.sleep(10)
+        timeout -= 1
+        if timeout <= 0:
+            print('Timeout error: no connection to penny found.')
+            sys.exit()
     print('connected!')
     data = b''
-    while wait:
+    while True:
         if SER.in_waiting > 0:
             data = SER.read(SER.in_waiting)  # Read all available data
             lines = data.decode('utf-8').split('\r\n')
