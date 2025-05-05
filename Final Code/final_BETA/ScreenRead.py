@@ -6,10 +6,11 @@ import os
 SQUARES = []
 TEMPLATES = {}
 SIZE = 0
-REGION = [357, 267, 1442, 1442] # for Surface Pro ... bot?
+# REGION = [357, 267, 1442, 1442] # for Surface Pro ... bot?
 # REGION = [412, 266, 1448, 1448] # for Surface Pro
 # REGION = [224, 152, 809, 809] # for left monitor (could be 205)
 # REGION = [2144, 152, 809, 809] # for right monitor NOT WORKING
+REGION = [234, 153, 928, 928]
 
 BUTTONS = []
 TEMPLATES_BUTTONS = {}
