@@ -115,7 +115,7 @@ class Tile(pygame.sprite.Sprite):
             screen.blit(self.image, self.rect)
 
 def event_loop():
-    global run_stock, stock_move_state, moves_i, stock_color
+    global run_stock, stock_move_state, moves_i, stock_color, update_state
 
     for event in pygame.event.get():
 
@@ -201,6 +201,7 @@ def event_loop():
 
             if event.key == pygame.K_LEFT: # view previous move
                 if moves_i != 0:
+                    update_state = 'n'
                     moves_i -= 1
                     board_set(fen_to_string(moves[moves_i]))
 
@@ -694,7 +695,7 @@ pygame.time.set_timer(move_timer, 1500)
 
 # run once
 board_reset()
-mod_stock(depth=10, elo=None) # modify skill/elo or depth. Normally I do 5 or 10 depth
+mod_stock(depth=10, elo=3500) # modify skill/elo or depth. Normally I do 5 or 10 depth, 3500 is the highest ELO
 # board_set(fen_to_string('k7/8/K7/P7/8/8/8/8'))
 # sg.board.set_board_fen('k7/8/K7/P7/8/8/8/8')
 
