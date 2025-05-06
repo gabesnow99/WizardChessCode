@@ -83,7 +83,7 @@ def check_for_opponent_move():
         sg.board.turn = not sg.board.turn
         print(sg.board, f'\n{"Black" if sg.board.turn else "White"} just moved.\n')
     
-def check_for_bot_move(): # BUG Stock needs some help using the black pieces
+def check_for_bot_move(): # BUG Stock needs some help promoting black
     global BOT_COLOR
 
     # if it's not the BOT's turn
